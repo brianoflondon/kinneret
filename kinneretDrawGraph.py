@@ -62,6 +62,8 @@ df.set_index('date', inplace=True)
 df.sort_values(by='date', ascending=False, inplace=True)
 
 
+
+
 df['year'] = df.index.year
 df['month'] = df.index.month
 df['week'] = df.index.week
@@ -165,10 +167,8 @@ dfmin.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
 dfmax.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
 
 # fig.add_annotation(dfmm.loc[1968,'annote'])
-fig.show()
+# fig.show()
 
-
-# %%
 def daysSinceJan1(date):
     """ Returns the number of days since Jan 1st """
     year = date.year
@@ -215,7 +215,6 @@ type(d)
 print(roshHash(d))
 
 
-# %%
 dfmin['jan1days'] = [daysSinceJan1(x) for x in dfmin['date']]
 dfmin['rhdays'] = [daysSinceRH(x) for x in dfmin['date']]
 dfmin['roshhash'] = [roshHash(d) for d in dfmin.index]
@@ -225,11 +224,7 @@ dfmax['roshhash'] = [roshHash(d) for d in dfmax.index]
 dfmax.describe()
 
 
-# %%
-dfmin.describe()
 
-
-# %%
 top = df['level'].max()
 dfmin['rhannote'] = [makeAnnote(x, top, 'blue', 800)
                      for x in dfmin['roshhash']]
@@ -243,33 +238,33 @@ pio.write_html(fig, file='index.html', auto_open=True)
 # Available frequencies in pandas include hourly ('H'), calendar daily ('D'), business daily ('B'), weekly ('W'), monthly ('M'), quarterly ('Q'), annual ('A'), and many others. Frequencies can also be specified as multiples of any of the base frequencies, for example '5D' for every five days.
 
 
-tol = .20
+# tol = .20
 
-q_low = dfmin["rhdays"].quantile(tol)
-q_hi = dfmin["rhdays"].quantile(1-tol)
+# q_low = dfmin["rhdays"].quantile(tol)
+# q_hi = dfmin["rhdays"].quantile(1-tol)
 
-filt = ((dfmin['rhdays'] > q_low) & (dfmin['rhdays'] < q_hi))
-dffilt = dfmin[filt]
-dffilt.describe()
+# filt = ((dfmin['rhdays'] > q_low) & (dfmin['rhdays'] < q_hi))
+# dffilt = dfmin[filt]
+# dffilt.describe()
 
-q_low = dfmax["rhdays"].quantile(tol)
-q_hi = dfmax["rhdays"].quantile(1-tol)
+# q_low = dfmax["rhdays"].quantile(tol)
+# q_hi = dfmax["rhdays"].quantile(1-tol)
 
-filt = (dfmax['rhdays'] > q_low) & (dfmax['rhdays'] < q_hi)
+# filt = (dfmax['rhdays'] > q_low) & (dfmax['rhdays'] < q_hi)
 
-dffilt = dfmax[filt]
-dffilt.describe()
+# dffilt = dfmax[filt]
+# dffilt.describe()
 
-q_low = dfmin["level"].quantile(0.01)
-q_hi = df["col"].quantile(0.99)
+# q_low = dfmin["level"].quantile(0.01)
+# q_hi = df["col"].quantile(0.99)
 
-df_filtered = df[(df["col"] < q_hi) & (df["col"] > q_low)]
+# df_filtered = df[(df["col"] < q_hi) & (df["col"] > q_low)]
 
 
-df['diff'] = df['level'].pct_change(freq='W', fill_method='pad')
+# df['diff'] = df['level'].pct_change(freq='W', fill_method='pad')
 
-figd = px.scatter(df, x=df.index, y=df['diff'], title='Difference period')
-figd.show()
+# figd = px.scatter(df, x=df.index, y=df['diff'], title='Difference period')
+# figd.show()
 
 
 # # %%
