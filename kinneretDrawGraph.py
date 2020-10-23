@@ -18,6 +18,70 @@ upperRedLine = -208.8
 lowerRedLine = -213.0
 histMin = -214.87
 
+outputDateFormat = '%Y-%m-%d'
+dataFile = 'data/levels-pd.csv'
+# df = pd.DataFrame()
+# dfmin = pd.DataFrame()
+# dfmax = pd.DataFrame()
+
+
+def setupDataFrames():
+    """ Set up the global dataframe with all the main data """
+    df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
+    df.set_index('date', inplace=True)
+    df.sort_values(by='date', ascending=False, inplace=True)
+    
+    df['year'] = df.index.year
+    df['month'] = df.index.month
+    df['week'] = df.index.week
+    df['day'] = df.index.day
+    df['weekday'] = df.index.weekday
+    df['hebyear'] = [getHebYear(d) for d in df.index]
+
+    # Needs a column for Year/Winter/Summer
+    # https://www.listendata.com/2019/07/python-list-comprehension-with-examples.html
+    # [makeAnnote(x,y,x.strftime('%b-%d')) for (x,y) in zip(dfmm['date-min'], dfmm['lv-min'])]
+    df['YearSeas'] = [f'{yr}-s' if mth > 5 else f'{yr}-w' for mth,
+                    yr in zip(df['month'], df['year'])]
+    df['season'] = ['s' if mth > 5 else 'w' for mth in df['month']]
+    return df
+
+
+    
+def fillMinMax(df):
+    """ Fills the data frames for the min an max levels of the lake """    
+    dfmin = pd.DataFrame(columns=['date', 'lv'])
+    dfmax = pd.DataFrame(columns=['date', 'lv'])
+    for yrs in df['YearSeas'].unique():
+        yr, seas = yrs.split('-')
+        filt = (df['YearSeas'] == yrs)
+        if seas == 's':
+            dfmin.loc[yr, 'date'] = df[filt]['level'].idxmin()
+            dfmin.loc[yr,  'lv'] = df[filt]['level'].min()
+        else:
+            dfmax.loc[yr, 'date'] = df[filt]['level'].idxmax()
+            dfmax.loc[yr,  'lv'] = df[filt]['level'].max()
+
+    dfmin['hebdate'] = [getHebMonthDay(x) for x in (dfmin['date'])]
+    dfmax['hebdate'] = [getHebMonthDay(x) for x in (dfmax['date'])]
+    dfmin['jan1days'] = [daysSinceJan1(x) for x in dfmin['date']]
+    dfmin['rhdays'] = [daysSinceRH(x) for x in dfmin['date']]
+    dfmin['roshhash'] = [roshHash(d) for d in dfmin.index]
+    dfmax['jan1days'] = [daysSinceJan1(x) for x in dfmax['date']]
+    dfmax['rhdays'] = [daysSinceRH(x) for x in dfmax['date']]
+    dfmax['roshhash'] = [roshHash(d) for d in dfmax.index]
+    
+    dfmin.style.format({'date': lambda d: d.strftime('%m-%d-%y')})
+    dfmax.style.format({'date': lambda d: d.strftime('%m-%d-%y')})
+
+    dfmin['annote'] = [makeAnnote(x, y, 'red', 80)
+                    for (x, y) in zip(dfmin['date'], dfmin['lv'])]
+    dfmax['annote'] = [makeAnnote(x, y, 'green', -80)
+                    for (x, y) in zip(dfmax['date'], dfmax['lv'])]
+
+
+    return dfmin, dfmax
+
 def getHebDate(date):
     """ Returns the year, month, day of the Hebrew date for a DateTime object"""
     day = date.day
@@ -40,77 +104,6 @@ def getHebYear(date):
 
 def d_parser(x): return datetime.strptime(x, outputDateFormat)
 
-# def getYearSeason(date):
-#     """ Return the Year-season but with winter of one year running into next
-#         i.e. Feb 1987 is 1986-w cut off March 1st """
-#     month = date.month
-#     year = date.year
-#     season = getSeason(month)
-#     if(month <= 3):
-#         year -= 1
-#     return f'{year}-{season}'
-
-# def getSeason(month):
-#     """ Return the season (s or w) but with winter of one year running into next
-#         i.e. Feb 1987 is 1986-w cut off March 1st  """
-#     if((month >= 8) or (month <= 3)):
-#         return 'w'
-#     else:
-#         return 's'
-
-
-outputDateFormat = '%Y-%m-%d'
-dataFile = 'data/levels-pd.csv'
-
-df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
-df.set_index('date', inplace=True)
-df.sort_values(by='date', ascending=False, inplace=True)
-
-
-
-
-df['year'] = df.index.year
-df['month'] = df.index.month
-df['week'] = df.index.week
-df['day'] = df.index.day
-df['weekday'] = df.index.weekday
-df['hebyear'] = [getHebYear(d) for d in df.index]
-
-
-# Needs a column for Year/Winter/Summer
-# https://www.listendata.com/2019/07/python-list-comprehension-with-examples.html
-# [makeAnnote(x,y,x.strftime('%b-%d')) for (x,y) in zip(dfmm['date-min'], dfmm['lv-min'])]
-
-df['YearSeas'] = [f'{yr}-s' if mth > 5 else f'{yr}-w' for mth,
-                  yr in zip(df['month'], df['year'])]
-df['season'] = ['s' if mth > 5 else 'w' for mth in df['month']]
-
-
-dfmm = pd.DataFrame(columns=['date-min', 'lv-min', 'date-max', 'lv-max'])
-dfmin = pd.DataFrame(columns=['date', 'lv'])
-dfmax = pd.DataFrame(columns=['date', 'lv'])
-
-
-for yrs in df['YearSeas'].unique():
-    yr, seas = yrs.split('-')
-    filt = (df['YearSeas'] == yrs)
-    if seas == 's':
-        dfmin.loc[yr, 'date'] = df[filt]['level'].idxmin()
-        dfmin.loc[yr,  'lv'] = df[filt]['level'].min()
-    else:
-        dfmax.loc[yr, 'date'] = df[filt]['level'].idxmax()
-        dfmax.loc[yr,  'lv'] = df[filt]['level'].max()
-
-dfmax
-
-
-
-
-
-
-dfmin['hebdate'] = [getHebMonthDay(x) for x in (dfmin['date'])]
-dfmax['hebdate'] = [getHebMonthDay(x) for x in (dfmax['date'])]
-
 def roshHashLine(x):
     """ Return a dictionary object for a vertical line. """
     thisShape = dict(
@@ -125,7 +118,6 @@ def roshHashLine(x):
         )
     )
     return thisShape
-
 
 def makeAnnote(x, y, colour, shift):
     """ Make an annotation including label """
@@ -163,36 +155,22 @@ def drawYearBoxes():
     """ Draw boxes around the Hebrew Years """
     pass
 
-def drawLevels():
-
+def drawLevel(level,colour,df):
+    """ return a dictionary fig.add_shape object with a horizontal line """
     firstDate = max(df.index)
     lastDate = min(df.index)
-    theseLines = []
     line = dict(
         type='line',
         x0=firstDate,
-        y0=lowerRedLine,
+        y0=level,
         x1=lastDate,
-        y1=lowerRedLine,
+        y1=level,
         line = dict(
-            color='Red',
+            color=colour,
             width=3
         )
     )
-    theseLines.append(line)
-    line = dict(
-        type='line',
-        x0=firstDate,
-        y0=upperRedLine,
-        x1=lastDate,
-        y1=upperRedLine,
-        line = dict(
-            color='Blue',
-            width=3
-        )
-    )
-    theseLines.append(line)
-    return theseLines
+    return line
 
 
 def getAnnoteText(date):
@@ -202,48 +180,6 @@ def getAnnoteText(date):
     hebT = getHebMonthDay(date)
     anT = f'{gregT}<br>{nl}{hebT}'
     return anT
-
-
-# df['level'].interpolate(method='cubic')
-# df['level'].rolling(window=5).mean()
-
-
-
-
-fig = px.scatter(df, x=df.index, y='level', title='Kinneret Water Level',
-                 labels={'x': 'Date', 'y': 'mm below Sea Level'})
-fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(
-    method='time', interval='3'), mode='lines'))
-
-
-
-# https://plotly.com/python/tick-formatting/
-# fig.update_layout(
-#     xaxis = dict(
-#         tickmode = 'array',
-#         tickvals = [],
-#         ticktext = []
-#     )
-# )
-
-
-lines = drawLevels()
-fig.add_shape(lines[0])
-fig.add_shape(lines[1])
-
-dfmin.style.format({'date': lambda d: d.strftime('%m-%d-%y')})
-dfmax.style.format({'date': lambda d: d.strftime('%m-%d-%y')})
-
-dfmin['annote'] = [makeAnnote(x, y, 'red', 80)
-                   for (x, y) in zip(dfmin['date'], dfmin['lv'])]
-dfmax['annote'] = [makeAnnote(x, y, 'green', -80)
-                   for (x, y) in zip(dfmax['date'], dfmax['lv'])]
-
-dfmin.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
-dfmax.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
-
-# fig.add_annotation(dfmm.loc[1968,'annote'])
-# fig.show()
 
 def daysSinceJan1(date):
     """ Returns the number of days since Jan 1st """
@@ -265,9 +201,6 @@ def daysSinceRH(date):
         diff = date-rhdate
     return diff
 
-    # rhlast = holidays.rosh_hashanah(year-1)
-
-
 def roshHash(dateoryear):
     """ Returns the date of Rosh Hashonah as a datetime object 
         Takes either a date or just a year """
@@ -282,22 +215,41 @@ def roshHash(dateoryear):
     return rhdate
 
 
-# print(daysSinceRH(datetime.datetime(1973,1,28)))
-# print(rh[0],rh[1],rh[2])
-# print(timeSinceJan1(datetime.datetime(1973,1,28)))
-d = datetime(1880, 1, 1)
-# roshHash(2020)
-type(d)
-print(roshHash(d))
 
 
-dfmin['jan1days'] = [daysSinceJan1(x) for x in dfmin['date']]
-dfmin['rhdays'] = [daysSinceRH(x) for x in dfmin['date']]
-dfmin['roshhash'] = [roshHash(d) for d in dfmin.index]
-dfmax['jan1days'] = [daysSinceJan1(x) for x in dfmax['date']]
-dfmax['rhdays'] = [daysSinceRH(x) for x in dfmax['date']]
-dfmax['roshhash'] = [roshHash(d) for d in dfmax.index]
-dfmax.describe()
+df = setupDataFrames()
+dfmin, dfmax = fillMinMax(df)
+
+fig = px.scatter(df, x=df.index, y='level', title='Kinneret Water Level',
+                 labels={'x': 'Date', 'y': 'mm below Sea Level'})
+fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(
+    method='time', interval='3'), mode='lines'))
+
+dfmin.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
+dfmax.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
+
+# https://plotly.com/python/tick-formatting/
+# fig.update_layout(
+#     xaxis = dict(
+#         tickmode = 'array',
+#         tickvals = [],
+#         ticktext = []
+#     )
+# )
+
+
+lines = [drawLevel(upperRedLine,'Blue',df),
+         drawLevel(lowerRedLine,'Red',df),
+         drawLevel(histMin,'Black',df)]
+
+for line in lines:
+    fig.add_shape(line)
+
+
+# fig.add_annotation(dfmm.loc[1968,'annote'])
+# fig.show()
+
+
 
 
 # Adding the Rosh Hashona lines
@@ -342,55 +294,3 @@ fig.update_layout(
 # fig.update_layout(autosize = True, height = 1080, width =1920)
 pio.write_html(fig, file='index.html', auto_open=True)
 chartStudioCreds()
-# cs_py.plot(fig, filename='Kinneret Historical Water Level (mm).html', auto_open=True)
-
-
-# Available frequencies in pandas include hourly ('H'), calendar daily ('D'), business daily ('B'), weekly ('W'), monthly ('M'), quarterly ('Q'), annual ('A'), and many others. Frequencies can also be specified as multiples of any of the base frequencies, for example '5D' for every five days.
-
-
-# tol = .20
-
-# q_low = dfmin["rhdays"].quantile(tol)
-# q_hi = dfmin["rhdays"].quantile(1-tol)
-
-# filt = ((dfmin['rhdays'] > q_low) & (dfmin['rhdays'] < q_hi))
-# dffilt = dfmin[filt]
-# dffilt.describe()
-
-# q_low = dfmax["rhdays"].quantile(tol)
-# q_hi = dfmax["rhdays"].quantile(1-tol)
-
-# filt = (dfmax['rhdays'] > q_low) & (dfmax['rhdays'] < q_hi)
-
-# dffilt = dfmax[filt]
-# dffilt.describe()
-
-# q_low = dfmin["level"].quantile(0.01)
-# q_hi = df["col"].quantile(0.99)
-
-# df_filtered = df[(df["col"] < q_hi) & (df["col"] > q_low)]
-
-
-# df['diff'] = df['level'].pct_change(freq='W', fill_method='pad')
-
-# figd = px.scatter(df, x=df.index, y=df['diff'], title='Difference period')
-# figd.show()
-
-
-# # %%
-# dataFile = 'data/levels-pd.csv'
-# def d_parser(x): return datetime.strptime(x, '%Y-%m-%d')
-
-
-# dfnew = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
-# dfnew.set_index('date', inplace=True)
-
-# dDate = datetime(2020, 10, 8)
-# filt = (dfnew.index == dDate)
-# dfnew.describe()
-
-
-# # %%
-# df.sort_values(by='date', ascending=False, inplace=True)
-# filt = df['level'] > df['level'][0]
-# df[filt]['level']
