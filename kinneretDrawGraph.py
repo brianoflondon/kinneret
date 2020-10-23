@@ -11,7 +11,12 @@ import plotly.graph_objs as go
 import plotly.express as px
 import plotly.io as pio
 from convertdate import hebrew, holidays
+from myChartStudio import chartStudioCreds
+import chart_studio.plotly as cs_py
 
+upperRedLine = -208.8
+lowerRedLine = -213.0
+histMin = -214.87
 
 def getHebDate(date):
     """ Returns the year, month, day of the Hebrew date for a DateTime object"""
@@ -99,9 +104,27 @@ for yrs in df['YearSeas'].unique():
 dfmax
 
 
-# %%
+
+
+
+
 dfmin['hebdate'] = [getHebMonthDay(x) for x in (dfmin['date'])]
 dfmax['hebdate'] = [getHebMonthDay(x) for x in (dfmax['date'])]
+
+def roshHashLine(x):
+    """ Return a dictionary object for a vertical line. """
+    thisShape = dict(
+        type='line',
+        x0=x,
+        y0=histMin,
+        x1=x,
+        y1=upperRedLine,
+        line = dict(
+            color='Red',
+            width=1
+        )
+    )
+    return thisShape
 
 
 def makeAnnote(x, y, colour, shift):
@@ -136,6 +159,41 @@ def makeAnnote(x, y, colour, shift):
     }
     return thisAnnote
 
+def drawYearBoxes():
+    """ Draw boxes around the Hebrew Years """
+    pass
+
+def drawLevels():
+
+    firstDate = max(df.index)
+    lastDate = min(df.index)
+    theseLines = []
+    line = dict(
+        type='line',
+        x0=firstDate,
+        y0=lowerRedLine,
+        x1=lastDate,
+        y1=lowerRedLine,
+        line = dict(
+            color='Red',
+            width=3
+        )
+    )
+    theseLines.append(line)
+    line = dict(
+        type='line',
+        x0=firstDate,
+        y0=upperRedLine,
+        x1=lastDate,
+        y1=upperRedLine,
+        line = dict(
+            color='Blue',
+            width=3
+        )
+    )
+    theseLines.append(line)
+    return theseLines
+
 
 def getAnnoteText(date):
     """ Takes in a date and returns the month-day and Hebrew month-day """
@@ -146,14 +204,32 @@ def getAnnoteText(date):
     return anT
 
 
-df['level'].interpolate(method='cubic')
-df['level'].rolling(window=5).mean()
+# df['level'].interpolate(method='cubic')
+# df['level'].rolling(window=5).mean()
+
+
 
 
 fig = px.scatter(df, x=df.index, y='level', title='Kinneret Water Level',
                  labels={'x': 'Date', 'y': 'mm below Sea Level'})
 fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(
     method='time', interval='3'), mode='lines'))
+
+
+
+# https://plotly.com/python/tick-formatting/
+# fig.update_layout(
+#     xaxis = dict(
+#         tickmode = 'array',
+#         tickvals = [],
+#         ticktext = []
+#     )
+# )
+
+
+lines = drawLevels()
+fig.add_shape(lines[0])
+fig.add_shape(lines[1])
 
 dfmin.style.format({'date': lambda d: d.strftime('%m-%d-%y')})
 dfmax.style.format({'date': lambda d: d.strftime('%m-%d-%y')})
@@ -224,15 +300,49 @@ dfmax['roshhash'] = [roshHash(d) for d in dfmax.index]
 dfmax.describe()
 
 
-
+# Adding the Rosh Hashona lines
 top = df['level'].max()
-dfmin['rhannote'] = [makeAnnote(x, top, 'blue', 800)
-                     for x in dfmin['roshhash']]
-dfmin.apply(lambda row: fig.add_annotation(row['rhannote']), axis=1)
+dfmin['rhannote'] = [roshHashLine(x) for x in dfmin['roshhash']]
+dfmin.apply(lambda row: fig.add_shape(row['rhannote']), axis=1)
+# dfmin.apply(lambda row: fig.add_annotation(row['rhannote']), axis=1)
 # fig.show()
+
+fig.update_layout(
+    xaxis=dict(
+        rangeselector=dict(
+            borderwidth=10,
+            buttons=list([
+                dict(count=1,
+                     label="1y",
+                     step="year",
+                     stepmode="backward"),
+                dict(count=4,
+                     label="4y",
+                     step="year",
+                     stepmode="backward"),
+                dict(count=20,
+                     label="20y",
+                     step="year",
+                     stepmode="backward"),
+                dict(count=1,
+                     label="1y",
+                     step="year",
+                     stepmode="backward"),
+                dict(step="all")
+            ])
+        ),
+        rangeslider=dict(
+            visible=True
+        ),
+        type="date"
+    )
+)
+
 
 # fig.update_layout(autosize = True, height = 1080, width =1920)
 pio.write_html(fig, file='index.html', auto_open=True)
+chartStudioCreds()
+# cs_py.plot(fig, filename='Kinneret Historical Water Level (mm).html', auto_open=True)
 
 
 # Available frequencies in pandas include hourly ('H'), calendar daily ('D'), business daily ('B'), weekly ('W'), monthly ('M'), quarterly ('Q'), annual ('A'), and many others. Frequencies can also be specified as multiples of any of the base frequencies, for example '5D' for every five days.
