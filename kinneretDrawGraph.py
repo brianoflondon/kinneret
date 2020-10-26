@@ -13,6 +13,7 @@ import plotly.io as pio
 from convertdate import hebrew, holidays
 from myChartStudio import chartStudioCreds
 import chart_studio.plotly as cs_py
+import json
 
 upperRedLine = -208.8
 lowerRedLine = -213.0
@@ -20,6 +21,8 @@ histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
 dataFile = 'data/levels-pd.csv'
+chartTitle = "Kinneret Level (Sea of Galilee)<br>(m) below sea level<br>by @brianoflondon"
+
 # df = pd.DataFrame()
 # dfmin = pd.DataFrame()
 # dfmax = pd.DataFrame()
@@ -115,7 +118,7 @@ def getHebDate(date):
 
 def getHebMonthDay(date):
     """ Returns the Hebrew month and day only as a string """
-    year, month, day = getHebDate(date)
+    _, month, day = getHebDate(date)
     return(f'{month}-{day}')
 
 
@@ -159,7 +162,7 @@ def getAnnoteText(date):
 
 
 def makeAnnote(x, y, colour, shift):
-    """ Make an annotation for level of lake including label 
+    """ Make an annotation for level of lake including label
         returns an annotation object"""
     label = getAnnoteText(x)
     thisAnnote = go.layout.Annotation(
@@ -233,7 +236,7 @@ def daysSinceRH(date):
 
 
 def roshHash(dateoryear):
-    """ Returns the date of Rosh Hashonah as a datetime object 
+    """ Returns the date of Rosh Hashonah as a datetime object
         Takes either a date or just a year """
     if type(dateoryear) is datetime:
         year = dateoryear.year
@@ -246,19 +249,19 @@ def roshHash(dateoryear):
     return rhdate
 
 
-if __name__ == "__main__":
-
+def drawKinGraph():
+    """ Draw the graph """
     # Global Filter
     dateFrom = datetime(2066, 1, 1)
     df = setupDataFrames()
     dfmin, dfmax = fillMinMax(df)
 
     # First line
-    fig = px.scatter(df, x=df.index, y='level', title='Kinneret Level (m) below Sea Level',
-                     labels={'x': 'Date', 'y': 'm below Sea Level'})
+    fig = px.scatter(df, x=df.index, y='level', title=chartTitle,
+                    labels={'x': 'Date', 'y': 'm below Sea Level'})
     # Second line
-    fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(
-        method='time', interval='20'), mode='lines', showlegend=False))
+    fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(method='time', interval='20'),
+                             mode='lines', showlegend=False))
 
     # Add the annotations for max and min
     # dfmin.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
@@ -269,7 +272,6 @@ if __name__ == "__main__":
 
     upAn = []
     dfmax.apply(lambda row: upAn.append(row['annote']), axis=1)
-
     lines = [drawLevel(upperRedLine, 'Blue', df),
              drawLevel(lowerRedLine, 'Red', df),
              drawLevel(histMin, 'Black', df)]
@@ -314,22 +316,22 @@ if __name__ == "__main__":
                     dict(label="None",
                          method="update",
                          args=[{"visible": [True, True, True]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "annotations": []}]),
                     dict(label="High",
                          method="update",
                          args=[{"visible": [True, True, True]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "annotations": upAn}]),
                     dict(label="Low",
                          method="update",
                          args=[{"visible": [True, True, True]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "annotations": dnAn}]),
                     dict(label="All",
                          method="update",
                          args=[{"visible": [True, True, True]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "annotations": upAn + dnAn}])
                 ]),
             ),
@@ -344,22 +346,22 @@ if __name__ == "__main__":
                     dict(label="None ",
                          method="update",
                          args=[{"visible": [True, True, False]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "shapes": []}]),
                     dict(label="Level Lines",
                          method="update",
                          args=[{"visible": [True, True, False]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "shapes": lines}]),
                     dict(label="Rosh Hashona",
                          method="update",
                          args=[{"visible": [True, True, True]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "shapes": rhSh}]),
                     dict(label="All Lines",
                          method="update",
                          args=[{"visible": [True, True, True, ]},
-                               {"title": "Kinneret Level (m) below Sea Level",
+                               {"title": chartTitle,
                                 "shapes": lines + rhSh}])
                 ])
             )
@@ -387,8 +389,8 @@ if __name__ == "__main__":
             rangeselector=dict(
                 yanchor='top',
                 xanchor='left',
-                x=0.04,
-                y=0.1,
+                x=0.02,
+                y=0.02,
                 borderwidth=1,
                 bgcolor='#d3d3d3',
                 activecolor='Green',
@@ -422,6 +424,26 @@ if __name__ == "__main__":
         )
     )
 
+    fig.add_layout_image(
+        dict(
+            source="https://i1.wp.com/brianoflondon.me/blog/wp-content/uploads/2019/01/cropped-Brian-of-London-with-sig-600x600.png?w=250&ssl=1",
+            xref="paper", yref="paper",
+            x=0.1, y=0.05,
+            sizex=0.2, sizey=0.2,
+            xanchor="left", yanchor="bottom"
+        )
+    )
+
+
+    
+
+
     # fig.update_layout(autosize = True, height = 1080, width =1920)
     pio.write_html(fig, file='index.html', auto_open=True)
-    chartStudioCreds()
+    # chartStudioCreds()
+
+    return True
+
+
+if __name__ == "__main__":
+    drawKinGraph()
