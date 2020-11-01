@@ -5,7 +5,7 @@
 /gathered-1
 /getNewReading.py
 /govil_kin.html
-/kin.ipynb
+/kin.ipyngit
 /kinWaterAuth.py
 /kinneret.py
 getNewReading.log
@@ -32,3 +32,5 @@ twitter/__init__.py
 twitter/__pycache__/__init__.cpython-38.pyc
 twitter/__pycache__/postToTwitter.cpython-38.pyc
 last_tweet.json
+index.html
+kin.ipynb

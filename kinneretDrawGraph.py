@@ -435,11 +435,8 @@ def drawKinGraph():
     )
 
 
-    
-
-
     # fig.update_layout(autosize = True, height = 1080, width =1920)
-    pio.write_html(fig, file='index.html', auto_open=True)
+    pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
     # chartStudioCreds()
 
     return True
