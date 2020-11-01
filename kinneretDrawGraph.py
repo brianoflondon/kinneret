@@ -21,7 +21,13 @@ histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
 dataFile = 'data/levels-pd.csv'
-chartTitle = "Kinneret Level (Sea of Galilee)<br>(m) below sea level<br>by @brianoflondon"
+chartTitle = """
+Kinneret Level (Sea of Galilee)<br>
+(m) below sea level<br>
+by <a href='https://brianoflondon.me/'>Brian of London</a>"""
+
+xAxesTitle = "Date (Hebrew Year)"
+yAxesTitle = "Level Below Sea Level (m)"
 
 # df = pd.DataFrame()
 # dfmin = pd.DataFrame()
@@ -375,7 +381,8 @@ def drawKinGraph():
     lastYear = datetime(max(df.index).year, 12, 31, 0)
 
     # fig.update_xaxes(range=[firstYear, lastYear], fixedrange=False)
-    fig.update_yaxes(range=[histMin-.1, upperRedLine+.1], fixedrange=False)
+    fig.update_yaxes(range=[histMin-.1,
+                            upperRedLine+.1], fixedrange=False)
     fig.update_layout(legend=dict(
         yanchor="top",
         y=0.99,
@@ -383,6 +390,8 @@ def drawKinGraph():
         x=0.01
     ))
     fig.update_layout(
+        xaxis_title=xAxesTitle,
+        yaxis_title=yAxesTitle,
         xaxis=dict(
             range=[firstYear, lastYear],
             fixedrange=False,
@@ -433,8 +442,6 @@ def drawKinGraph():
             xanchor="left", yanchor="bottom"
         )
     )
-
-
     # fig.update_layout(autosize = True, height = 1080, width =1920)
     pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
     # chartStudioCreds()
