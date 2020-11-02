@@ -21,10 +21,9 @@ histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
 dataFile = 'data/levels-pd.csv'
-chartTitle = """
-Kinneret Level (Sea of Galilee)<br>
-(m) below sea level<br>
-by <a href='https://brianoflondon.me/'>Brian of London</a>"""
+todayDate = datetime.now()
+chartTitle = f"""
+Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>(m) below sea level<br>by <a href='https://brianoflondon.me/'>Brian of London</a>"""
 
 xAxesTitle = "Date (Hebrew Year)"
 yAxesTitle = "Level Below Sea Level (m)"
@@ -255,6 +254,47 @@ def roshHash(dateoryear):
     return rhdate
 
 
+    
+def addRangeSlider(fig, df):
+    """ Take in a figure and update it with a range slider """
+    firstYear = datetime(min(df.index).year, 1, 1, 0)
+    lastYear = datetime(max(df.index).year, 12, 31, 0)
+    fig.update_layout(
+        xaxis=dict(
+            range=[firstYear, lastYear],
+            fixedrange=False,
+            rangeselector=dict(
+                yanchor='top',
+                xanchor='left',
+                x=0.02,
+                y=0.02,
+                borderwidth=1,
+                bgcolor='#d3d3d3',
+                activecolor='Green',
+                buttons=rangeButtons()
+            ),
+            rangeslider=dict(
+                visible=True
+            ),
+            type="date"
+        )
+    )
+    return fig
+
+def rangeButtons(steps = None):
+    """ returns a list of buttons for range slider jumps """
+    if steps = None:
+        steps = [1,4,20,40,56]
+    aList = []
+    for s in steps:
+        aDic = dict(count=s,
+                    label=f'{s}y',
+                    step="year",
+                    stepmode="backward")
+        aList.append(aDic)
+    return aList
+
+
 def drawKinGraph():
     """ Draw the graph """
     # Global Filter
@@ -377,9 +417,6 @@ def drawKinGraph():
     # top = df['level'].max()
     dfmin['rhannote'] = [roshHashLine(x) for x in dfmin['roshhash']]
 
-    firstYear = datetime(min(df.index).year, 1, 1, 0)
-    lastYear = datetime(max(df.index).year, 12, 31, 0)
-
     # fig.update_xaxes(range=[firstYear, lastYear], fixedrange=False)
     fig.update_yaxes(range=[histMin-.1,
                             upperRedLine+.1], fixedrange=False)
@@ -389,48 +426,11 @@ def drawKinGraph():
         xanchor="left",
         x=0.01
     ))
+    fig = addRangeSlider(fig, df)
+
     fig.update_layout(
         xaxis_title=xAxesTitle,
-        yaxis_title=yAxesTitle,
-        xaxis=dict(
-            range=[firstYear, lastYear],
-            fixedrange=False,
-            rangeselector=dict(
-                yanchor='top',
-                xanchor='left',
-                x=0.02,
-                y=0.02,
-                borderwidth=1,
-                bgcolor='#d3d3d3',
-                activecolor='Green',
-                buttons=list([
-                    dict(count=1,
-                         label="1y",
-                         step="year",
-                         stepmode="backward"),
-                    dict(count=4,
-                         label="4y",
-                         step="year",
-                         stepmode="backward"),
-                    dict(count=20,
-                         label="20y",
-                         step="year",
-                         stepmode="backward"),
-                    dict(count=40,
-                         label="40y",
-                         step="year",
-                         stepmode="backward"),
-                    dict(count=56,
-                         label="56y",
-                         step="year",
-                         stepmode="backward")
-                ])
-            ),
-            rangeslider=dict(
-                visible=True
-            ),
-            type="date"
-        )
+        yaxis_title=yAxesTitle
     )
 
     fig.add_layout_image(
@@ -446,8 +446,60 @@ def drawKinGraph():
     pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
     # chartStudioCreds()
 
-    return True
+    return df
+
+
+def drawChangesGraph(df=None):
+    if df is None:
+        df = setupDataFrames(dateFr='2010-1-1')
+    df['7day'] = df['level'].diff(periods=-7)
+    df['1month'] = df['level'].diff(periods=-30)
+    filtUp = df['7day'] >= 0
+    filtDn = df['7day'] < 0
+    # figch = px.line(df, x=df.index, y='1month',
+    #                 title='Kinneret Water Level 1 Month change',
+    #                 labels={'date': 'Date', '1month': '1 Month Change (m)'})
+    figch = go.Figure()
+    figch.update_layout(title='Kinneret Water Level 7 Day change (m)',
+                        legend = dict(
+                            x = 0.90),
+                        yaxis_title='7 Day Change (m)')
+    figch.add_trace(go.Scatter(x=df[filtUp].index, y=df[filtUp]['7day'],
+                                marker_symbol = 'triangle-up',
+                                name='7 Day Up',
+                                mode='markers',
+                                marker=dict(size = 20,
+                                            cmax = 0.5,
+                                            cmin = 0,
+                                           colorscale = 'portland',
+                                           reversescale=True,
+                                           showscale=True,
+                                           color=df[filtUp]['7day'],
+                                           colorbar = dict(x = 1.02, y = .75,
+                                                           len = 0.5)
+                                           )
+                                ))
+    figch.add_trace(go.Scatter(x=df[filtDn].index, y=df[filtDn]['7day'],
+                                marker_symbol = 'triangle-down',
+                                name='7 Day Down',
+                                mode='markers',
+                                marker=dict(size = 20,
+                                            # cmax = 0,
+                                            # cmin = -0.2,
+                                           colorscale = 'portland',
+                                           reversescale=True,
+                                           showscale=True,
+                                           color=df[filtDn]['7day'],
+                                           colorbar = dict(x=1.02, y=.25,
+                                                           len = 0.5))
+                                ))
+    
+    figch = addRangeSlider(figch,df)
+    # figch.show()
+    pio.write_html(figch, file='brianoflondon_site/changes.html', auto_open=True)    
+
 
 
 if __name__ == "__main__":
-    drawKinGraph()
+    # df = drawKinGraph()
+    drawChangesGraph()
