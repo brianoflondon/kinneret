@@ -53,6 +53,11 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['day'] = df.index.day
     df['weekday'] = df.index.weekday
     df['hebyear'] = [getHebYear(d) for d in df.index]
+    
+    df['7day'] = df['level'].diff(periods=-7) * 100
+    df['1month'] = df['level'].diff(periods=-30) * 100
+    df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm' for (
+        lv, ch) in zip(round(df['level'], 3), df['7day'])]
 
     # Needs a column for Year/Winter/Summer
     # https://www.listendata.com/2019/07/python-list-comprehension-with-examples.html
@@ -257,11 +262,12 @@ def roshHash(dateoryear):
     
 def addRangeSlider(fig, df):
     """ Take in a figure and update it with a range slider """
-    firstYear = datetime(min(df.index).year, 1, 1, 0)
+    # firstYear = datetime(min(df.index).year, 1, 1, 0)
+    firstYear = datetime(max(df.index).year-5, 1, 1, 0)
     lastYear = datetime(max(df.index).year, 12, 31, 0)
     fig.update_layout(
         xaxis=dict(
-            range=[firstYear, lastYear],
+            range=[firstYear , lastYear],
             fixedrange=False,
             rangeselector=dict(
                 yanchor='top',
@@ -271,7 +277,8 @@ def addRangeSlider(fig, df):
                 borderwidth=1,
                 bgcolor='#d3d3d3',
                 activecolor='Green',
-                buttons=rangeButtons()
+                buttons=rangeButtons(),
+                visible=True
             ),
             rangeslider=dict(
                 visible=True
@@ -283,14 +290,15 @@ def addRangeSlider(fig, df):
 
 def rangeButtons(steps = None):
     """ returns a list of buttons for range slider jumps """
-    if steps = None:
+    if steps == None:
         steps = [1,4,20,40,56]
     aList = []
     for s in steps:
         aDic = dict(count=s,
                     label=f'{s}y',
                     step="year",
-                    stepmode="backward")
+                    stepmode="backward",
+                    visible=True)
         aList.append(aDic)
     return aList
 
@@ -303,11 +311,16 @@ def drawKinGraph():
     dfmin, dfmax = fillMinMax(df)
 
     # First line
-    fig = px.scatter(df, x=df.index, y='level', title=chartTitle,
-                    labels={'x': 'Date', 'y': 'm below Sea Level'})
+    # fig = px.scatter(df, x=df.index, y='level', title=chartTitle,
+    #                 labels={'x': 'Date', 'y': 'm below Sea Level'})
+    fig = px.scatter(title=chartTitle, labels={
+                     'x': 'Date', 'y': 'm below Sea Level'})
+
+    fig = addChangeTriangles(fig, df)
+
     # Second line
-    fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(method='time', interval='20'),
-                             mode='lines', showlegend=False))
+    # fig.add_trace(go.Scatter(x=df.index, y=df['level'].interpolate(method='time', interval='20'),
+    #                          mode='lines', showlegend=False))
 
     # Add the annotations for max and min
     # dfmin.apply(lambda row: fig.add_annotation(row['annote']), axis=1)
@@ -417,6 +430,7 @@ def drawKinGraph():
     # top = df['level'].max()
     dfmin['rhannote'] = [roshHashLine(x) for x in dfmin['roshhash']]
 
+    fig = addBolAvatar(fig)
     # fig.update_xaxes(range=[firstYear, lastYear], fixedrange=False)
     fig.update_yaxes(range=[histMin-.1,
                             upperRedLine+.1], fixedrange=False)
@@ -433,6 +447,15 @@ def drawKinGraph():
         yaxis_title=yAxesTitle
     )
 
+    # fig.update_layout(autosize = True, height = 1080, width =1920)
+    pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
+    # chartStudioCreds()
+
+    return df
+
+
+def addBolAvatar(fig):
+    """ Adds avatar image to bottom left of graph """
     fig.add_layout_image(
         dict(
             source="https://i1.wp.com/brianoflondon.me/blog/wp-content/uploads/2019/01/cropped-Brian-of-London-with-sig-600x600.png?w=250&ssl=1",
@@ -442,64 +465,117 @@ def drawKinGraph():
             xanchor="left", yanchor="bottom"
         )
     )
-    # fig.update_layout(autosize = True, height = 1080, width =1920)
-    pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
-    # chartStudioCreds()
-
-    return df
+    return fig
 
 
 def drawChangesGraph(df=None):
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
-    df['7day'] = df['level'].diff(periods=-7)
-    df['1month'] = df['level'].diff(periods=-30)
     filtUp = df['7day'] >= 0
     filtDn = df['7day'] < 0
     # figch = px.line(df, x=df.index, y='1month',
     #                 title='Kinneret Water Level 1 Month change',
     #                 labels={'date': 'Date', '1month': '1 Month Change (m)'})
     figch = go.Figure()
-    figch.update_layout(title='Kinneret Water Level 7 Day change (m)',
+    figch.update_layout(title='Kinneret Water Level 7 Day change (cm)',
                         legend = dict(
                             x = 0.90),
-                        yaxis_title='7 Day Change (m)')
+                        yaxis_title='7 Day Change (cm)')
     figch.add_trace(go.Scatter(x=df[filtUp].index, y=df[filtUp]['7day'],
                                 marker_symbol = 'triangle-up',
                                 name='7 Day Up',
                                 mode='markers',
-                                marker=dict(size = 20,
-                                            cmax = 0.5,
-                                            cmin = 0,
-                                           colorscale = 'portland',
-                                           reversescale=True,
+                               marker=dict(size=10,
+                                           colorscale=blueUp,
+                                           reversescale=False,
                                            showscale=True,
                                            color=df[filtUp]['7day'],
                                            colorbar = dict(x = 1.02, y = .75,
-                                                           len = 0.5)
+                                                           len=0.5, title='7 Day Change (cm)')
                                            )
                                 ))
     figch.add_trace(go.Scatter(x=df[filtDn].index, y=df[filtDn]['7day'],
                                 marker_symbol = 'triangle-down',
                                 name='7 Day Down',
                                 mode='markers',
-                                marker=dict(size = 20,
+                               marker=dict(size=10,
                                             # cmax = 0,
                                             # cmin = -0.2,
-                                           colorscale = 'portland',
+                                            colorscale=redDn,
                                            reversescale=True,
                                            showscale=True,
                                            color=df[filtDn]['7day'],
                                            colorbar = dict(x=1.02, y=.25,
                                                            len = 0.5))
                                 ))
-    
-    figch = addRangeSlider(figch,df)
+    figch = addBolAvatar(figch)
+    figch = addRangeSlider(figch, df)
     # figch.show()
-    pio.write_html(figch, file='brianoflondon_site/changes.html', auto_open=True)    
+    pio.write_html(
+        figch, file='brianoflondon_site/changes.html', auto_open=True)
 
 
+def addChangeTriangles(figch, df=None):
+    """ takes a fig object and adds up down triangles in a colour scale according to 7 day
+        change ploting out the level of the lake """
+    if df is None:
+        df = setupDataFrames(dateFr='2010-1-1')
+    filtUp = df['7day'] >= 0
+    filtDn = df['7day'] < 0
+
+    # figch = go.Figure()
+    # figch.update_layout(title='Kinneret Water Level (m)',
+    #                     legend = dict(
+    #                         x = 0.90),
+    #                     yaxis_title='Level (m)')
+    figch.add_trace(go.Scatter(x=df[filtUp].index, y=df[filtUp]['level'],
+                               text=df['hovtext'],
+                               hovertemplate='%{text}',
+                               marker_symbol='triangle-up',
+                               name='7 Day Up',
+                               mode='markers',
+                               marker=dict(size=10,
+                                           colorscale=blueUp,
+                                           reversescale=False,
+                                           showscale=True,
+                                           color=df[filtUp]['7day'],
+                                           colorbar=dict(x=1.02, y=.75,
+                                                         len=0.5, title='7 Day Change (cm)')
+                                           )
+                               ))
+    figch.add_trace(go.Scatter(x=df[filtDn].index, y=df[filtDn]['level'],
+                               text=df['hovtext'],
+                               hovertemplate='%{text}',
+                               marker_symbol='triangle-down',
+                               name='7 Day Down',
+                               mode='markers',
+                               marker=dict(size=10,
+                                           # cmax = 0,
+                                           # cmin = -0.2,
+                                           colorscale=redDn,
+                                           reversescale=True,
+                                           showscale=True,
+                                           color=df[filtDn]['7day'],
+                                           colorbar=dict(x=1.02, y=.25,
+                                                         len=0.5))
+                               ))
+    # figch=addBolAvatar(figch)
+    # figch = addRangeSlider(figch,df)
+    return figch
+    # figch.show()
+    # pio.write_html(figch, file='brianoflondon_site/changes2.html', auto_open=True)
+
+
+blueUp = [[0, 'rgb(199, 68, 124)'],
+          [0.3, 'rgb(17, 92, 165)'],
+          [0.3, 'rgb(17, 92, 165)'],
+          [1.0, 'rgb(5, 48, 107)']]
+
+redDn = [[0, 'rgb(199, 68, 124)'],
+         [0.8, 'rgb(252, 128, 97)'],
+         [0.8, 'rgb(252, 128, 97)'],
+         [1.0, 'rgb(104, 0, 12)']]
 
 if __name__ == "__main__":
-    # df = drawKinGraph()
-    drawChangesGraph()
+    df = drawKinGraph()
+    # drawChangesGraph(df)
