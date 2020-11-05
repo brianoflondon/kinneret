@@ -53,10 +53,9 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['day'] = df.index.day
     df['weekday'] = df.index.weekday
     df['hebyear'] = [getHebYear(d) for d in df.index]
-
+    
     df['7day'] = df['level'].diff(periods=-7) * 100
     df['1month'] = df['level'].diff(periods=-30) * 100
-    df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm' for (lv, ch) in zip(round(df['level'], 3), df['7day'])]
 
     # Needs a column for Year/Winter/Summer
     # https://www.listendata.com/2019/07/python-list-comprehension-with-examples.html
@@ -371,19 +370,22 @@ def drawKinGraph():
     fig.update_layout(
         updatemenus=[
             dict(
-                type="buttons",
+                type="dropdown",
                 name="Markers",
                 direction="down",
                 active=1,
                 x=0.4,
                 y=1.1,
                 buttons=list([
-                    dict(label="Level Line",
+                    dict(label="Simple Line",
                          method="restyle",
                          args=[{"visible": [False,False,True]}]),
-                    dict(label="Changes",
+                    dict(label="Change Arrows",
                          method="restyle",
-                         args=[{"visible": [True,True,False]}])
+                         args=[{"visible": [True, True, False]}]),
+                    dict(label="Both",
+                         method="restyle",
+                         args=[{"visible": [True, True, True]}])
                          ]),
                 ),
             dict(
@@ -396,22 +398,22 @@ def drawKinGraph():
                 buttons=list([
                     dict(label="None",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "annotations": []}]),
                     dict(label="High",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "annotations": upAn}]),
                     dict(label="Low",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "annotations": dnAn}]),
                     dict(label="All",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "annotations": upAn + dnAn}])
                 ]),
@@ -426,22 +428,22 @@ def drawKinGraph():
                 buttons=list([
                     dict(label="None ",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "shapes": []}]),
                     dict(label="Level Lines",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "shapes": lines}]),
                     dict(label="Rosh Hashona",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "shapes": rhSh}]),
                     dict(label="All Lines",
                          method="update",
-                         args=[{"visible": [True, True, True]},
+                         args=[{"visible": []},
                                {"title": chartTitle,
                                 "shapes": lines + rhSh}])
                 ])
@@ -490,43 +492,54 @@ def addBolAvatar(fig):
     return fig
 
 
-def drawChangesGraph(df=None):
+def drawChangesGraph(df=None, period=7):
+    """ Draws a graph of the change over the last period days """
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
-    filtUp = df['7day'] >= 0
-    filtDn = df['7day'] < 0
+    dCol = f'{period}day'    
+    df[dCol]= df['level'].diff(periods= -period) * 100
+    filtUp = df[dCol] >= 0
+    filtDn = df[dCol] < 0
 
     figch = go.Figure()
-    figch.update_layout(title='Kinneret Water Level 7 Day change (cm)',
+    figch.update_layout(title=f'Kinneret Water Level {period} Day change (cm)',
                         legend=dict(
                             x=0.90),
-                        yaxis_title='7 Day Change (cm)')
-    figch = addChangeTriangles(figch, False, df)
+                        yaxis_title=f'{period} Day Change (cm)')
+    figch = addChangeTriangles(figch, False, df, period)
     figch = addBolAvatar(figch)
     figch = addRangeSlider(figch, df)
     # figch.show()
     pio.write_html(
-        figch, file='brianoflondon_site/changes.html', auto_open=True)
+        figch, file=f'brianoflondon_site/changes-{period}-days.html', auto_open=True)
 
 
-def addChangeTriangles(figch, plotLevel=True, df=None):
+def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
     """ takes a fig object and adds up down triangles in a colour scale according to 7 day
         change ploting out the level of the lake 
         If plotLevel is true plot the points at the right level, else
         produce a change graph"""
+    dCol = f'{period}day'
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
-    filtUp = df['7day'] >= 0
-    filtDn = df['7day'] < 0
+
+    df[dCol]= df['level'].diff(periods= -period) * 100
+    df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (lv, ch, d) in zip(round(df['level'], 3), df[dCol],df.index)]
+        
+    filtUp = df[dCol] > 0
+    filtLv = df[dCol] == 0
+    filtDn = df[dCol] < 0
 
     if plotLevel is True:
         yValsU = df[filtUp]['level']
+        yValsL = df[filtLv]['level']
         yValsD = df[filtDn]['level']
     else:
-        yValsU = df[filtUp]['7day']
-        yValsD = df[filtDn]['7day']
-    colU = df[filtUp]['7day']
-    colD = df[filtDn]['7day']
+        yValsU = df[filtUp][dCol]
+        yValsL = df[filtLv][dCol]
+        yValsD = df[filtDn][dCol]
+    colU = df[filtUp][dCol]
+    colD = df[filtDn][dCol]
 
     figch.add_trace(go.Scatter(x=df[filtUp].index, y=yValsU,
                                text=df[filtUp]['hovtext'],
@@ -541,7 +554,22 @@ def addChangeTriangles(figch, plotLevel=True, df=None):
                                            showscale=True,
                                            color=colU,
                                            colorbar=dict(x=0.98, y=.75,
-                                                         len=0.5, title='7 Day<br>Change<br>(cm)')
+                                                         len=0.5, title=f'{period} Day<br>Change<br>(cm)')
+                                           )
+                               ))
+    figch.add_trace(go.Scatter(x=df[filtLv].index, y=yValsL,
+                               text=df[filtLv]['hovtext'],
+                               hovertemplate='%{text}',
+                               marker_symbol='hexagram',
+                               name='No Change',
+                               showlegend=False,
+                               mode='markers',
+                               marker=dict(size=10,
+                                           color='lightblue',
+                                            line=dict(
+                                                color='MediumPurple',
+                                                width=2
+                                            )
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtDn].index, y=yValsD,
@@ -580,5 +608,7 @@ redDn = [[0, 'rgb(199, 68, 124)'],
          [1.0, 'rgb(104, 0, 12)']]
 
 if __name__ == "__main__":
-    df = drawKinGraph()
-    drawChangesGraph()
+    # df = drawKinGraph()
+    drawChangesGraph(period=7)
+    drawChangesGraph(period=1)
+    drawChangesGraph(period=30)
