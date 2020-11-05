@@ -504,7 +504,7 @@ def drawChangesGraph(df=None, period=7):
         dCol = f'{p}day'    
         df[dCol]= df['level'].diff(periods= -p) * 100
         figch = addChangeTriangles(figch, False, df, p)
-        vis[]
+        # vis[]
         
         
     figch.update_layout(title=f'Kinneret Water Level {p} Day change (cm)',
@@ -515,6 +515,11 @@ def drawChangesGraph(df=None, period=7):
     figch = addBolAvatar(figch)
     figch = addRangeSlider(figch, df)
     # figch.show()
+    
+    # buttons =
+    
+    
+    
     figch.update_layout(
         updatemenus=[
             dict(
@@ -525,24 +530,23 @@ def drawChangesGraph(df=None, period=7):
                 x=0.4,
                 y=1.1,
                 buttons=list([
-                    for p in periods:
-                        dict(label=f"{p} Day",
-                            method="update",
-                            args=[{"visible": [True, True, True, 
-                                                False, False, False,
-                                                False, False, False]},
-                                {"title": f'Kinneret Water Level {p} Day change (cm)'}])
-                        dict(label="7 Day",
-                            method="update",
-                            args=[{"visible": [False, False, False, 
-                                                True, True, True,
-                                                False, False, False,]}]),
-                        dict(label="30 Day",
-                            method="update",
-                            args=[{"visible": [False, False, False, 
-                                                False, False, False,
-                                                True, True, True]}])
-                            ]),
+                    dict(label=f"{p} Day",
+                        method="update",
+                        args=[{"visible": [True, True, True, 
+                                            False, False, False,
+                                            False, False, False]},
+                            {"title": f'Kinneret Water Level {p} Day change (cm)'}]),
+                    dict(label="7 Day",
+                        method="update",
+                        args=[{"visible": [False, False, False, 
+                                            True, True, True,
+                                            False, False, False,]}]),
+                    dict(label="30 Day",
+                        method="update",
+                        args=[{"visible": [False, False, False, 
+                                            False, False, False,
+                                            True, True, True]}])
+                        ]),
                 )]
     )
     
