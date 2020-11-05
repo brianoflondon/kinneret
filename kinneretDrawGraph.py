@@ -493,7 +493,7 @@ def addBolAvatar(fig):
 
 def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
-    periods = [1, 7, 30]
+    periods = [1, 7, 30, 60, 365]
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
 
@@ -514,61 +514,56 @@ def drawChangesGraph(df=None, period=7):
     figch = addRangeSlider(figch, df)
     # figch.show()
 
-    tr3 = [True] * 3
-    fl3 = [False] * 3
-    matrix = []
-    matrix.append(tr3 + fl3 + fl3)
-    matrix.append(fl3 + tr3 + fl3)
-    matrix.append(fl3 + fl3 + tr3)
+    # tr3 = [True] * 3
+    # fl3 = [False] * 3
+    # matrix = []
+    leng = len(periods)
+    matrix = [[False] * leng*3 for _ in range(leng)]
+    for i in range(0,leng):        
+        for c in range(i*3,i*3+3):
+            matrix[i][c] = True
+        
+        
+    # matrix.append(tr3 + fl3 + fl3)
+    # matrix.append(fl3 + tr3 + fl3)
+    # matrix.append(fl3 + fl3 + tr3)
+    # matrix.append(tr3 + tr3 + tr3)
 
     # plotly.graph_objs.layout.updatemenu.Button
     butts = []
     i = 0
+    
     for p in periods:
+        titleTxt = f"Kinneret Water Level {p} Day change (cm)<br>by <a href='https://brianoflondon.me/'>Brian of London</a>"
+    
         thisBut = go.layout.updatemenu.Button(
             label=f"{p} Day",
             method="update",
             args=[{"visible": matrix[i]},
-                  {"title": f'Kinneret Water Level {p} Day change (cm)'}]
+                  {"title": titleTxt}]
         )
         butts.append(thisBut)
         i += 1
 
-    testbut = list([
-                    dict(label=f"{p} Day",
-                        method="update",
-                        args=[{"visible": [True, True, True, 
-                                            False, False, False,
-                                            False, False, False]},
-                            {"title": f'Kinneret Water Level {p} Day change (cm)'}]),
-                    dict(label="7 Day",
-                        method="update",
-                        args=[{"visible": [False, False, False, 
-                                            True, True, True,
-                                            False, False, False,]}]),
-                    dict(label="30 Day",
-                        method="update",
-                        args=[{"visible": [False, False, False, 
-                                            False, False, False,
-                                            True, True, True]}])
-                        ])
-
-    print(testbut)
-    print('-------')
-    print(butts)
     figch.update_layout(
         updatemenus=[
             dict(
                 type="buttons",
                 name="Markers",
                 direction="right",
-                active=1,
+                active=0,
                 x=0.6,
                 y=1.05,
                 buttons=butts
             )]
     )
-
+    # figch_data_Scatter.update_layout(visible=matrix[0])
+    figch.update_traces(visible=False)
+    figch.update_traces(visible=True,
+                        selector=dict(meta=1))
+    # figch.scatter.update_layout(visible=matrix[0])
+    
+    
     pio.write_html(
         figch, file=f'brianoflondon_site/changes-{period}-days.html', auto_open=True)
 
@@ -602,6 +597,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     colD = df[filtDn][dCol]
 
     figch.add_trace(go.Scatter(x=df[filtUp].index, y=yValsU,
+                               meta=period,
                                text=df[filtUp]['hovtext'],
                                hovertemplate='%{text}',
                                marker_symbol='triangle-up',
@@ -618,6 +614,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtLv].index, y=yValsL,
+                               meta=period,
                                text=df[filtLv]['hovtext'],
                                hovertemplate='%{text}',
                                marker_symbol='hexagram',
@@ -633,6 +630,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtDn].index, y=yValsD,
+                               meta=period,
                                text=df[filtDn]['hovtext'],
                                hovertemplate='%{text}',
                                marker_symbol='triangle-down',
