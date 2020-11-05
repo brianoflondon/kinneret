@@ -315,7 +315,7 @@ def drawKinGraph():
                      'x': 'Date', 'y': 'm below Sea Level'})
 
     # Second and third traces
-    fig = addChangeTriangles(fig, True, df)
+    fig = addChangeTriangles(fig, True, df, 1)
     # Fourth Trace line
     fig.add_trace(go.Scatter(x=df.index, y=df['level'],
                              name='Level',
@@ -379,13 +379,13 @@ def drawKinGraph():
                 buttons=list([
                     dict(label="Simple Line",
                          method="restyle",
-                         args=[{"visible": [False,False,True]}]),
+                         args=[{"visible": [False, False, False, True]}]),
                     dict(label="Change Arrows",
                          method="restyle",
-                         args=[{"visible": [True, True, False]}]),
+                         args=[{"visible": [True, True, True, False]}]),
                     dict(label="Both",
                          method="restyle",
-                         args=[{"visible": [True, True, True]}])
+                         args=[{"visible": [True, True, True, True]}])
                          ]),
                 ),
             dict(
@@ -494,22 +494,61 @@ def addBolAvatar(fig):
 
 def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
+    periods = [1,7,30]
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
-    dCol = f'{period}day'    
-    df[dCol]= df['level'].diff(periods= -period) * 100
-    filtUp = df[dCol] >= 0
-    filtDn = df[dCol] < 0
 
     figch = go.Figure()
-    figch.update_layout(title=f'Kinneret Water Level {period} Day change (cm)',
+    i = 0
+    for p in periods:
+        dCol = f'{p}day'    
+        df[dCol]= df['level'].diff(periods= -p) * 100
+        figch = addChangeTriangles(figch, False, df, p)
+        vis[]
+        
+        
+    figch.update_layout(title=f'Kinneret Water Level {p} Day change (cm)',
                         legend=dict(
                             x=0.90),
                         yaxis_title=f'{period} Day Change (cm)')
-    figch = addChangeTriangles(figch, False, df, period)
+
     figch = addBolAvatar(figch)
     figch = addRangeSlider(figch, df)
     # figch.show()
+    figch.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                name="Markers",
+                direction="right",
+                active=1,
+                x=0.4,
+                y=1.1,
+                buttons=list([
+                    for p in periods:
+                        dict(label=f"{p} Day",
+                            method="update",
+                            args=[{"visible": [True, True, True, 
+                                                False, False, False,
+                                                False, False, False]},
+                                {"title": f'Kinneret Water Level {p} Day change (cm)'}])
+                        dict(label="7 Day",
+                            method="update",
+                            args=[{"visible": [False, False, False, 
+                                                True, True, True,
+                                                False, False, False,]}]),
+                        dict(label="30 Day",
+                            method="update",
+                            args=[{"visible": [False, False, False, 
+                                                False, False, False,
+                                                True, True, True]}])
+                            ]),
+                )]
+    )
+    
+    
+    
+    
     pio.write_html(
         figch, file=f'brianoflondon_site/changes-{period}-days.html', auto_open=True)
 
@@ -553,7 +592,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
                                            reversescale=False,
                                            showscale=True,
                                            color=colU,
-                                           colorbar=dict(x=0.98, y=.75,
+                                           colorbar=dict(x=0.98, y=.73,
                                                          len=0.5, title=f'{period} Day<br>Change<br>(cm)')
                                            )
                                ))
@@ -586,16 +625,32 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
                                            reversescale=True,
                                            showscale=True,
                                            color=colD,
-                                           colorbar=dict(x=0.98, y=.25,
+                                           colorbar=dict(x=0.98, y=.23,
                                                          len=0.5))
                                ))
-
-    # figch=addBolAvatar(figch)
-    # figch = addRangeSlider(figch,df)
     return figch
-    # figch.show()
-    # pio.write_html(figch, file='brianoflondon_site/changes2.html', auto_open=True)
 
+
+
+# def createChangeMarkerTemplate():
+#     """ Creates the marker templates for the Up, Level and Down change
+#         triangles """
+#     cTemp = go.layout.Template()
+#     cTemp.data.scatter = [go.Scatter(marker=dict(size=10,
+#                                                 colorscale=blueUp,
+#                                                 reversescale=False,
+#                                                 showscale=True,
+#                                                 color=colU,
+#                                                 colorbar=dict(x=0.98, y=.73,
+#                                                                 len=0.5, title=f'{period} Day<br>Change<br>(cm)')
+#                                            )
+        
+        
+        
+        
+#     )]
+    
+        
 
 blueUp = [[0, 'rgb(199, 68, 124)'],
           [0.3, 'rgb(17, 92, 165)'],
@@ -609,6 +664,7 @@ redDn = [[0, 'rgb(199, 68, 124)'],
 
 if __name__ == "__main__":
     # df = drawKinGraph()
-    drawChangesGraph(period=7)
-    drawChangesGraph(period=1)
-    drawChangesGraph(period=30)
+    drawChangesGraph()
+    # drawChangesGraph(period=7)
+    # drawChangesGraph(period=1)
+    # drawChangesGraph(period=30)
