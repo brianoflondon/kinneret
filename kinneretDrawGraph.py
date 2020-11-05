@@ -53,7 +53,7 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['day'] = df.index.day
     df['weekday'] = df.index.weekday
     df['hebyear'] = [getHebYear(d) for d in df.index]
-    
+
     df['7day'] = df['level'].diff(periods=-7) * 100
     df['1month'] = df['level'].diff(periods=-30) * 100
 
@@ -320,7 +320,7 @@ def drawKinGraph():
     fig.add_trace(go.Scatter(x=df.index, y=df['level'],
                              name='Level',
                              mode='lines',
-                             showlegend=False, 
+                             showlegend=False,
                              visible=True))
 
     # Add the annotations for max and min
@@ -365,7 +365,6 @@ def drawKinGraph():
     allTrue = [True] * 5
     allFalse = [False] * 5
 
-
     # https://plotly.com/python/custom-buttons/
     fig.update_layout(
         updatemenus=[
@@ -386,8 +385,8 @@ def drawKinGraph():
                     dict(label="Both",
                          method="restyle",
                          args=[{"visible": [True, True, True, True]}])
-                         ]),
-                ),
+                ]),
+            ),
             dict(
                 type="buttons",
                 name="Annotations",
@@ -494,19 +493,18 @@ def addBolAvatar(fig):
 
 def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
-    periods = [1,7,30]
+    periods = [1, 7, 30]
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
 
     figch = go.Figure()
     i = 0
     for p in periods:
-        dCol = f'{p}day'    
-        df[dCol]= df['level'].diff(periods= -p) * 100
+        dCol = f'{p}day'
+        df[dCol] = df['level'].diff(periods=-p) * 100
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
-        
-        
+
     figch.update_layout(title=f'Kinneret Water Level {p} Day change (cm)',
                         legend=dict(
                             x=0.90),
@@ -515,21 +513,28 @@ def drawChangesGraph(df=None, period=7):
     figch = addBolAvatar(figch)
     figch = addRangeSlider(figch, df)
     # figch.show()
-    
-    # buttons =
-    
-    
-    
-    figch.update_layout(
-        updatemenus=[
-            dict(
-                type="buttons",
-                name="Markers",
-                direction="right",
-                active=1,
-                x=0.4,
-                y=1.1,
-                buttons=list([
+
+    tr3 = [True] * 3
+    fl3 = [False] * 3
+    matrix = []
+    matrix.append(tr3 + fl3 + fl3)
+    matrix.append(fl3 + tr3 + fl3)
+    matrix.append(fl3 + fl3 + tr3)
+
+    # plotly.graph_objs.layout.updatemenu.Button
+    butts = []
+    i = 0
+    for p in periods:
+        thisBut = go.layout.updatemenu.Button(
+            label=f"{p} Day",
+            method="update",
+            args=[{"visible": matrix[i]},
+                  {"title": f'Kinneret Water Level {p} Day change (cm)'}]
+        )
+        butts.append(thisBut)
+        i += 1
+
+    testbut = list([
                     dict(label=f"{p} Day",
                         method="update",
                         args=[{"visible": [True, True, True, 
@@ -546,18 +551,29 @@ def drawChangesGraph(df=None, period=7):
                         args=[{"visible": [False, False, False, 
                                             False, False, False,
                                             True, True, True]}])
-                        ]),
-                )]
+                        ])
+
+    print(testbut)
+    print('-------')
+    print(butts)
+    figch.update_layout(
+        updatemenus=[
+            dict(
+                type="buttons",
+                name="Markers",
+                direction="right",
+                active=1,
+                x=0.6,
+                y=1.05,
+                buttons=butts
+            )]
     )
-    
-    
-    
-    
+
     pio.write_html(
         figch, file=f'brianoflondon_site/changes-{period}-days.html', auto_open=True)
 
 
-def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
+def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     """ takes a fig object and adds up down triangles in a colour scale according to 7 day
         change ploting out the level of the lake 
         If plotLevel is true plot the points at the right level, else
@@ -566,9 +582,10 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
 
-    df[dCol]= df['level'].diff(periods= -period) * 100
-    df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (lv, ch, d) in zip(round(df['level'], 3), df[dCol],df.index)]
-        
+    df[dCol] = df['level'].diff(periods=-period) * 100
+    df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
+        lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]
+
     filtUp = df[dCol] > 0
     filtLv = df[dCol] == 0
     filtDn = df[dCol] < 0
@@ -609,10 +626,10 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
                                mode='markers',
                                marker=dict(size=10,
                                            color='lightblue',
-                                            line=dict(
-                                                color='MediumPurple',
-                                                width=2
-                                            )
+                                           line=dict(
+                                               color='MediumPurple',
+                                               width=2
+                                           )
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtDn].index, y=yValsD,
@@ -635,7 +652,6 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
     return figch
 
 
-
 # def createChangeMarkerTemplate():
 #     """ Creates the marker templates for the Up, Level and Down change
 #         triangles """
@@ -648,13 +664,10 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period = 7):
 #                                                 colorbar=dict(x=0.98, y=.73,
 #                                                                 len=0.5, title=f'{period} Day<br>Change<br>(cm)')
 #                                            )
-        
-        
-        
-        
+
+
 #     )]
-    
-        
+
 
 blueUp = [[0, 'rgb(199, 68, 124)'],
           [0.3, 'rgb(17, 92, 165)'],
