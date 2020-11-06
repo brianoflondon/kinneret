@@ -33,6 +33,15 @@ yAxesTitle = "Level Below Sea Level (m)"
 # dfmax = pd.DataFrame()
 
 
+def getLevelDelta(df, ind, dateOff):
+    """ Returns the level timedelta ago using pandas timedelta """
+    timeAgo = dateOff + ind
+    filt = df.index.get_loc(timeAgo, method='nearest')
+    oldLevel = df.iloc[filt].level
+    return df.iloc[0]['level'] - oldLevel
+
+
+
 def setupDataFrames(dateFr=None, dateTo=None):
     """ Set up the global dataframe with all the main data """
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
@@ -56,6 +65,9 @@ def setupDataFrames(dateFr=None, dateTo=None):
 
     df['7day'] = df['level'].diff(periods=-7) * 100
     df['1month'] = df['level'].diff(periods=-30) * 100
+
+    # df['check']= [a-b for a,b in zip(df['1monthAc'],df['1month'])]
+
 
     # Needs a column for Year/Winter/Summer
     # https://www.listendata.com/2019/07/python-list-comprehension-with-examples.html
@@ -281,6 +293,9 @@ def addRangeSlider(fig, df):
                 visible=True
             ),
             type="date"
+        ),
+        yaxis=dict(
+            fixedrange=False
         )
     )
     return fig
@@ -495,7 +510,7 @@ def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
     periods = [1, 7, 30, 60, 365]
     if df is None:
-        df = setupDataFrames(dateFr='2010-1-1')
+        df = setupDataFrames(dateFr='2015-1-1')
 
     figch = go.Figure()
     i = 0
@@ -504,6 +519,11 @@ def drawChangesGraph(df=None, period=7):
         df[dCol] = df['level'].diff(periods=-p) * 100
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
+        
+    if 365 in periods:
+        dateOff = pd.DateOffset(years=-1)
+        df['365day'] = [100 * getLevelDelta(df, i, dateOff) for i in df.index]
+
 
     figch.update_layout(title=f'Kinneret Water Level {p} Day change (cm)',
                         legend=dict(
@@ -565,7 +585,7 @@ def drawChangesGraph(df=None, period=7):
     
     
     pio.write_html(
-        figch, file=f'brianoflondon_site/changes-{period}-days.html', auto_open=True)
+        figch, file=f'brianoflondon_site/changes.html', auto_open=True)
 
 
 def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
@@ -678,7 +698,16 @@ redDn = [[0, 'rgb(199, 68, 124)'],
          [1.0, 'rgb(104, 0, 12)']]
 
 if __name__ == "__main__":
-    # df = drawKinGraph()
+    df = setupDataFrames()
+
+    # dateOff = pd.DateOffset(years=-2)
+    # oldLevel = getLevelDelta(df,df.index[0],dateOff)
+    # print(df.iloc[0]['level'],oldLevel)
+
+    # print(df)
+    # print(df.describe())
+
+    df = drawKinGraph()
     drawChangesGraph()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
