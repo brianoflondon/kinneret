@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+# from twitterCreds import setupTweets
 from twitter.twitterCreds import setupTweets
 
 
@@ -54,7 +55,7 @@ def getTweetText(df, i=0):
     else:
         wasIs = 'was'
 
-    levelNow = f'💧{tDate:%a %b %d} the level of the Kinneret {wasIs} {tLev:.2f}m {tCh} in 7 days.'
+    levelNow = f'💧{tDate:%a %b %d} the level of the Kinneret {wasIs} {tLev:.3f}m {tCh} in 7 days.'
     levelYst = f'{t1Ch} since last reading.'
     levelHist = []
     for y in [1, 5, 10]:
@@ -68,32 +69,62 @@ def getLastTweetID():
     """ Return the ID of the last tweet in the thread for the Kinneret level """
     with open('last_tweet.json', 'r') as jsfile:
         lastTweet = json.load(jsfile)
-    return lastTweet['id']
+    return lastTweet['id'], lastTweet['entities']['urls'][0]['expanded_url']
 
 
-def sendLatestTweet(df, send=False):
+def sendLatestTweet(df, send=False, newItems=1):
     """ Send the latest level tweet.
         Returns the tweet txt and the threadID if sent """
     # Lat and long of centre of Kinneret 32.822564, 35.592016
     # Tiberius 32.793809, 35.542755
+    tweets = []
+    if newItems > 1:
+        tweets.append(getCatchUpTweet(df, newItems))
+
+    tweets.append(getTweetText(df))
+
+    if send:
+        threadIDs, tweetURsL = sendTweet(tweets)
+        return True, tweets, threadIDs, tweetURLs
+    else:
+        return False, tweets, [], []
+
+
+def getCatchUpTweet(df, newReadings):
+    """ Build the Text for a tweet catching up the most recent new readings """
+    tweetTxt = f"💧Since the last Tweet we've had {newReadings} new readings:\n"
+    levels = df.iloc[0:newReadings]['level'].tolist()
+    dates = df.iloc[0:newReadings].index.tolist()
+    levels.reverse()
+    dates.reverse()
+    for l, d in zip(levels, dates):
+        tweetTxt = tweetTxt + (f'{d:%d %b}: {l:0.3f}\n')
+
+    return tweetTxt
+
+
+def sendTweet(tweets):
+    """ Just send a tweet or tweets from a list"""
     success, answ, api = setupTweets()
     if not success:
         return answ
-    threadID = getLastTweetID()
-    tweetTxt = getTweetText(df)
-    if send:
-        latt = 32.793809
-        longg = 35.542755
+    latt = 32.793809
+    longg = 35.542755
+    threadIDs = []
+    threadURLs = []
+    for tweetTxt in tweets:
+        threadID, threadURLs = getLastTweetID()
         thisID = api.update_status(status=tweetTxt,
-                                   lat=latt,
-                                   long=longg,
-                                   in_reply_to_status_id=threadID)
-
+                                    lat=latt,
+                                    long=longg,
+                                    in_reply_to_status_id=threadID)
+        threadIDs.append(
+            thisID._json['id'], thisID._json['entities']['urls'][0]['expanded_url'])
         with open('last_tweet.json', 'w') as jsfile:
             json.dump(thisID._json, jsfile, indent=2)
-        return tweetTxt, thisID._json['id']
-    else:
-        return (f'{tweetTxt} - not sent'), threadID
+
+    return threadIDs, threadURLs
+
 
 
 if __name__ == "__main__":

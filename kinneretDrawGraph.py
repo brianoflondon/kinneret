@@ -583,9 +583,10 @@ def drawChangesGraph(df=None, period=7):
                         selector=dict(meta=1))
     # figch.scatter.update_layout(visible=matrix[0])
     
-    
+    outputF = f'brianoflondon_site/changes'
     pio.write_html(
-        figch, file=f'brianoflondon_site/changes.html', auto_open=True)
+        figch, file=f'{outputF}.html', auto_open=True)
+    figch.write_image(f'{outputF}.png', engine="kaleido", width=1920, height=1080)
 
 
 def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
@@ -707,7 +708,7 @@ if __name__ == "__main__":
     # print(df)
     # print(df.describe())
 
-    df = drawKinGraph()
+    # df = drawKinGraph()
     drawChangesGraph()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
