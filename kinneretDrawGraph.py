@@ -41,7 +41,6 @@ def getLevelDelta(df, ind, dateOff):
     return df.iloc[0]['level'] - oldLevel
 
 
-
 def setupDataFrames(dateFr=None, dateTo=None):
     """ Set up the global dataframe with all the main data """
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
@@ -67,7 +66,6 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['1month'] = df['level'].diff(periods=-30) * 100
 
     # df['check']= [a-b for a,b in zip(df['1monthAc'],df['1month'])]
-
 
     # Needs a column for Year/Winter/Summer
     # https://www.listendata.com/2019/07/python-list-comprehension-with-examples.html
@@ -486,7 +484,11 @@ def drawKinGraph():
     )
 
     # fig.update_layout(autosize = True, height = 1080, width =1920)
+
     pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
+    fig.write_image('brianoflondon_site/kinneret_level.png',
+                   
+                    engine="kaleido", width=1920, height=1080)
     # chartStudioCreds()
 
     return df
@@ -519,11 +521,10 @@ def drawChangesGraph(df=None, period=7):
         df[dCol] = df['level'].diff(periods=-p) * 100
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
-        
+
     if 365 in periods:
         dateOff = pd.DateOffset(years=-1)
         df['365day'] = [100 * getLevelDelta(df, i, dateOff) for i in df.index]
-
 
     figch.update_layout(title=f'Kinneret Water Level {p} Day change (cm)',
                         legend=dict(
@@ -539,11 +540,10 @@ def drawChangesGraph(df=None, period=7):
     # matrix = []
     leng = len(periods)
     matrix = [[False] * leng*3 for _ in range(leng)]
-    for i in range(0,leng):        
-        for c in range(i*3,i*3+3):
+    for i in range(0, leng):
+        for c in range(i*3, i*3+3):
             matrix[i][c] = True
-        
-        
+
     # matrix.append(tr3 + fl3 + fl3)
     # matrix.append(fl3 + tr3 + fl3)
     # matrix.append(fl3 + fl3 + tr3)
@@ -552,10 +552,10 @@ def drawChangesGraph(df=None, period=7):
     # plotly.graph_objs.layout.updatemenu.Button
     butts = []
     i = 0
-    
+
     for p in periods:
         titleTxt = f"Kinneret Water Level {p} Day change (cm)<br>by <a href='https://brianoflondon.me/'>Brian of London</a>"
-    
+
         thisBut = go.layout.updatemenu.Button(
             label=f"{p} Day",
             method="update",
@@ -582,11 +582,12 @@ def drawChangesGraph(df=None, period=7):
     figch.update_traces(visible=True,
                         selector=dict(meta=1))
     # figch.scatter.update_layout(visible=matrix[0])
-    
+
     outputF = f'brianoflondon_site/changes'
     pio.write_html(
         figch, file=f'{outputF}.html', auto_open=True)
-    figch.write_image(f'{outputF}.png', engine="kaleido", width=1920, height=1080)
+    figch.write_image(f'{outputF}.png', engine="kaleido",
+                      width=1920, height=1080)
 
 
 def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
