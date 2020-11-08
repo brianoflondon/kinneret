@@ -23,7 +23,9 @@ outputDateFormat = '%Y-%m-%d'
 dataFile = 'data/levels-pd.csv'
 todayDate = datetime.now()
 chartTitle = f"""
-Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>(m) below sea level<br>by <a href='https://brianoflondon.me/'>Brian of London</a>"""
+Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>
+(m) below sea level<br>
+by <a href='https://brianoflondon.me/kinneret'>Brian of London (back to main site)</a>"""
 
 xAxesTitle = "Date (Hebrew Year)"
 yAxesTitle = "Level Below Sea Level (m)"
@@ -485,7 +487,8 @@ def drawKinGraph():
 
     # fig.update_layout(autosize = True, height = 1080, width =1920)
 
-    pio.write_html(fig, file='brianoflondon_site/index.html', auto_open=True)
+    pio.write_html(
+        fig, file='brianoflondon_site/kinneret_level.html', auto_open=True)
     fig.write_image('brianoflondon_site/kinneret_level.png',
                    
                     engine="kaleido", width=1920, height=1080)
@@ -525,8 +528,9 @@ def drawChangesGraph(df=None, period=7):
     if 365 in periods:
         dateOff = pd.DateOffset(years=-1)
         df['365day'] = [100 * getLevelDelta(df, i, dateOff) for i in df.index]
+    titleTxt = f"Kinneret Water Level {p} Day change (cm)<br>{todayDate:%d %b %Y}<br>by <a href='https://brianoflondon.me/kinneret'>Brian of London (back to main site)</a>"
 
-    figch.update_layout(title=f'Kinneret Water Level {p} Day change (cm)',
+    figch.update_layout(title=titleTxt,
                         legend=dict(
                             x=0.90),
                         yaxis_title=f'{period} Day Change (cm)')
@@ -554,7 +558,7 @@ def drawChangesGraph(df=None, period=7):
     i = 0
 
     for p in periods:
-        titleTxt = f"Kinneret Water Level {p} Day change (cm)<br>by <a href='https://brianoflondon.me/'>Brian of London</a>"
+        titleTxt = f"Kinneret Water Level {p} Day change (cm)<br>{todayDate:%d %b %Y}<br>by <a href='https://brianoflondon.me/kinneret'>Brian of London (back to main site)</a>"
 
         thisBut = go.layout.updatemenu.Button(
             label=f"{p} Day",
@@ -709,7 +713,7 @@ if __name__ == "__main__":
     # print(df)
     # print(df.describe())
 
-    # df = drawKinGraph()
+    df = drawKinGraph()
     drawChangesGraph()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
