@@ -1,5 +1,7 @@
 import pandas as pd
 import json
+import csv
+import datetime
 # from twitterCreds import setupTweets
 from twitter.twitterCreds import setupTweets
 
@@ -84,10 +86,10 @@ def sendLatestTweet(df, send=False, newItems=1):
     tweets.append(getTweetText(df))
 
     if send:
-        threadIDs, tweetURsL = sendTweet(tweets)
-        return True, tweets, threadIDs, tweetURLs
+        threadIDs, tweetURLs, errors = sendTweet(tweets)
+        return True, tweets, threadIDs, tweetURLs, errors
     else:
-        return False, tweets, [], []
+        return False, tweets, [], [], []
 
 
 def getCatchUpTweet(df, newReadings):
@@ -112,18 +114,90 @@ def sendTweet(tweets):
     longg = 35.542755
     threadIDs = []
     threadURLs = []
+    errors = []
     for tweetTxt in tweets:
-        threadID, threadURLs = getLastTweetID()
-        thisID = api.update_status(status=tweetTxt,
-                                    lat=latt,
-                                    long=longg,
-                                    in_reply_to_status_id=threadID)
-        threadIDs.append(
-            thisID._json['id'], thisID._json['entities']['urls'][0]['expanded_url'])
+        threadID, _ = getLastTweetID()
+        try:
+            thisID = api.update_status(status=tweetTxt,
+                                        lat=latt,
+                                        long=longg,
+                                        in_reply_to_status_id=threadID)
+        
+        except Exception as ex:
+            errors.append(f'Tweet Problem: {ex}')
+            print(f'Tweet Problem: {ex}')
+            # logger.warning(f'Tweet Problem: {ex}')
+            thisID = getTweetJson(threadID)
+        
+        iD = thisID._json['id']
+        urL = thisID._json['entities']['urls'][0]['expanded_url']
+        dateC = thisID._json['created_at']
+            
+        threadIDs.append(iD)
+        threadURLs.append(urL)
+
         with open('last_tweet.json', 'w') as jsfile:
             json.dump(thisID._json, jsfile, indent=2)
 
-    return threadIDs, threadURLs
+
+        with open('tweet_ids.csv', 'a') as tFile:
+            csvRow = [dateC,iD,urL]
+            writer = csv.writer(tFile)
+            writer.writerow(csvRow)
+
+    return threadIDs, threadURLs, errors
+
+
+def fillThreadCSV(thisId):
+    """ Take in an Id and fill a csv with all the replies """
+    success, answ, api = setupTweets()
+    if not success:
+        return answ
+    csvRows = []
+    
+    myStatus = api.get_status(id=thisId, include_card_uri=True)
+
+    dateC = myStatus._json['created_at']
+    iD = myStatus._json['id']
+    urL = myStatus._json['entities']['urls'][0]['expanded_url']
+    
+    inReplyTo = myStatus._json['in_reply_to_status_id']
+
+    csvRow = [dateC,iD,urL]
+    csvRows.append(csvRow)
+    while inReplyTo is not None:
+        myStatus = api.get_status(id=inReplyTo, include_card_uri=True)
+        inReplyTo = myStatus._json['in_reply_to_status_id']
+        dateC = myStatus._json['created_at']
+
+        iD = myStatus._json['id']
+        urL = myStatus._json['entities']['urls'][0]['expanded_url']
+        csvRow = [dateC,iD,urL]
+        print(csvRow)
+        csvRows.insert(0, csvRow)
+            
+    with open('tweet_ids.csv', 'w') as tFile:
+        writer = csv.writer(tFile)
+        header = ['created_at','id','expanded_url']
+        writer.writerow(header)
+        for row in csvRows:
+            writer.writerow(row)
+
+
+
+def getTweetJson(thisId):
+    """ Grabs and saves as the last_tweet.json the ID past """
+    success, answ, api = setupTweets()
+    if not success:
+        return answ
+
+    myStatus = api.get_status(id=thisId, include_card_uri=True)
+    myJson = myStatus._json
+
+    with open('last_tweet.json', 'w') as jsfile:
+        json.dump(myJson, jsfile, indent=2)
+
+    return myStatus
 
 
 
