@@ -57,7 +57,7 @@ def getTweetText(df, i=0):
     else:
         wasIs = 'was'
 
-    levelNow = f'💧{tDate:%a %b %d} the level of the Kinneret {wasIs} {tLev:.3f}m {tCh} in 7 days.'
+    levelNow = f'💧{tDate:%a %b %d} Kinneret level {wasIs} {tLev:.3f}m\n{tCh} in 7 days.'
     levelYst = f'{t1Ch} since last reading.'
     levelHist = []
     for y in [1, 5, 10]:
