@@ -37,11 +37,11 @@ def getTweetText(df, i=0):
     tLev = df.iloc[[i]]['level'].item()
     tDif = round(100*df.iloc[[i]]['7day'].item(), 2)
     if tDif < 0:
-        tCh = f'📉 dropping {-tDif:.0f}cm'
+        tCh = f'📉 dropping {-tDif:.1f}cm'
     elif tDif == 0:
         tCh = '🟢 without changing'
     elif tDif > 0:
-        tCh = f'📈 rising {tDif:.0f}cm'
+        tCh = f'📈 rising {tDif:.1f}cm'
 
     t1Dif = (tLev - df.iloc[[i+1]]['level'].item())*1000
     if t1Dif < 0:
