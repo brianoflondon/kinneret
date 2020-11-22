@@ -18,3 +18,7 @@ last_tweet.json
 index.html
 kin.ipynb
 getNewReading_2020-11-06.log
+old_logs/new_items_added.log
+readlog.py
+old_logs/getNewReading_2020-11-19.log
+sftpconnect.py

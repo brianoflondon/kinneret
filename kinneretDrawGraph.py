@@ -4,6 +4,7 @@
 
 
 from datetime import datetime
+import glob
 import pandas as pd
 import csv
 import plotly as py
@@ -14,6 +15,8 @@ from convertdate import hebrew, holidays
 from myChartStudio import chartStudioCreds
 import chart_studio.plotly as cs_py
 import json
+from sftpconnect import connectSFTP
+import pysftp
 
 upperRedLine = -208.8
 lowerRedLine = -213.0
@@ -675,6 +678,17 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                ))
     return figch
 
+def uploadGraphs():
+    """ Upload the graphs to brianoflondon.me using SFTP """
+    sftp = pysftp
+    sftp = connectSFTP()
+    fold = 'brianoflondon_site'
+    with sftp:
+        sftp.cwd('public_html/kinneret')
+        for filen in glob.glob(f'{fold}/*'):
+            sftp.put(filen)
+    sftp.close()
+    
 
 # def createChangeMarkerTemplate():
 #     """ Creates the marker templates for the Up, Level and Down change
@@ -704,6 +718,7 @@ redDn = [[0, 'rgb(199, 68, 124)'],
          [1.0, 'rgb(104, 0, 12)']]
 
 if __name__ == "__main__":
+
     df = setupDataFrames()
 
     # dateOff = pd.DateOffset(years=-2)
@@ -715,6 +730,7 @@ if __name__ == "__main__":
 
     df = drawKinGraph()
     drawChangesGraph()
+    uploadGraphs()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
     # drawChangesGraph(period=30)
