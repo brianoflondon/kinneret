@@ -71,7 +71,13 @@ def getLastTweetID():
     """ Return the ID of the last tweet in the thread for the Kinneret level """
     with open('last_tweet.json', 'r') as jsfile:
         lastTweet = json.load(jsfile)
-    return lastTweet['id'], lastTweet['entities']['urls'][0]['expanded_url']
+    iD = lastTweet['id']
+    try:
+        urL = lastTweet['entities']['urls'][0]['expanded_url']
+    except Exception as ex:
+        urL = f'https://twitter.com/brianoflondon/status/{iD}'
+        
+    return iD, urL
 
 
 def sendLatestTweet(df, send=False, newItems=1):
@@ -130,7 +136,11 @@ def sendTweet(tweets):
             thisID = getTweetJson(threadID)
         
         iD = thisID._json['id']
-        urL = thisID._json['entities']['urls'][0]['expanded_url']
+        try:
+            urL = thisID._json['entities']['urls'][0]['expanded_url']
+        except Exception as ex:
+            urL = f'https://twitter.com/brianoflondon/status/{iD}'
+        
         dateC = thisID._json['created_at']
             
         threadIDs.append(iD)

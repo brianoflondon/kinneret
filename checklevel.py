@@ -58,12 +58,14 @@ if myArgs['auto'] is False:
 
     print(finMsg)
 
+
+
 else: 
     daysToRun = (0,1,2,3,6)
     now = datetime.now()
     if now.weekday() in daysToRun: #Monday to 
         while now.hour == 11:
-            now = datetime.now():
+            now = datetime.now()
             fre = 10
             maxT = 60
             print(f'Running for {maxT}m, checking every {fre}m ....')
