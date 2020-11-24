@@ -4,8 +4,16 @@ import argparse
 import os
 import sys
 from getNewReading import runCheckAndTweet, checkAndTweet
-from datetime import datetime
+from datetime import datetime, timedelta
+import time
 
+
+def timeInRange(start, end, x):
+    """Return true if x is in the range [start, end] for datetime objects"""
+    if start.time() <= end.time():
+        return start.time() <= x.time() <= end.time()
+    else:
+        return start.time() <= x.time() or x.time() <= end.time()
 
 # Create the parser
 my_parser = argparse.ArgumentParser(prog='checklevel',
@@ -33,10 +41,14 @@ my_parser.add_argument('-v',
 
 my_parser.add_argument('-a',
                        '--auto',
-                       action='store', type=bool, required=False,
+                       action='store_true', required=False,
                        default=False,
                        help='Automatic starts up and waits till 11:00 then checks every 10m until 12:15 then checks every 2 hours again')
 
+# my_parser.add_argument('-h',
+#                        '--help',
+#                        action='help',
+#                        help='Shows Help')
 
 
 # Execute parse_args()
@@ -61,19 +73,48 @@ if myArgs['auto'] is False:
 
 
 else: 
-    daysToRun = (0,1,2,3,6)
-    now = datetime.now()
-    if now.weekday() in daysToRun: #Monday to 
-        while now.hour == 11:
-            now = datetime.now()
-            fre = 10
-            maxT = 60
-            print(f'Running for {maxT}m, checking every {fre}m ....')
-            checkAndTweet(True)
-            _, sent, txt = runCheckAndTweet(maxT, fre)
+    weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+    while True:
+        daysToRun = (0,1,2,3,6)
+        fre = 10
+        freTD = timedelta(minutes=fre)
+        now = datetime.now()
+        print(now.time())
+
+        startChecks = now.replace(hour=11, minute=0)
+        endChecks = now.replace(hour=12, minute=15)
+        
+        maxT = endChecks - now
+        if now.weekday() in daysToRun: #Monday to 
+            while (timeInRange(startChecks,endChecks,now)) and (maxT>freTD):
+                while True:
+                    now = datetime.now()
+                    maxT = endChecks - now
+                    if maxT<freTD:
+                        break
+                    print(f'Running for {maxT}m, checking every {fre}m ....')
+                    _, sent, txt = checkAndTweet(True)
+                    if sent:
+                        quit()
+                    time.sleep(fre*60)
+            else:
+                while True:
+                    now = datetime.now()
+                    fre = 60
+                    maxT = endChecks - now
+                    if (maxT.days > 0) and (maxT < timedelta(minutes=(fre*2))):
+                        fre = maxT.min()
+                    freTD = timedelta(minutes=fre)
+                    print(now.weekday())
+                    if (not(now.weekday() in daysToRun)) or (timeInRange(startChecks,endChecks,now)):
+                        break
+                    print(f'Running for {maxT}m, checking every {fre}m ....')
+                    _, sent, txt = checkAndTweet(True)
+                    if sent:
+                        quit()
+                    time.sleep(fre*60)
             
         else:
-            fre = 30
-            maxT = 600
-            print(f'Running for {maxT}m, checking every {fre}m ....')
-            _, sent, txt = runCheckAndTweet(maxT, fre) 
+            dayText = weekDays[now.weekday()]
+            print(f'Not Running on {dayText}')
+            break
