@@ -82,8 +82,8 @@ else:
         now = datetime.now()
         print(now.time())
 
-        startChecks = now.replace(hour=9, minute=0)
-        endChecks = now.replace(hour=9, minute=15)
+        startChecks = now.replace(hour=11, minute=0)
+        endChecks = now.replace(hour=12, minute=15)
         
         maxTdelta = endChecks - now
         if now.weekday() in daysToRun: #Monday to 
