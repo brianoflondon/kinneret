@@ -73,6 +73,7 @@ if myArgs['auto'] is False:
 
 
 else: 
+    sent = False
     weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
     while True:
         daysToRun = (0,1,2,3,6)
@@ -81,38 +82,55 @@ else:
         now = datetime.now()
         print(now.time())
 
-        startChecks = now.replace(hour=11, minute=0)
-        endChecks = now.replace(hour=12, minute=15)
+        startChecks = now.replace(hour=9, minute=0)
+        endChecks = now.replace(hour=9, minute=15)
         
-        maxT = endChecks - now
+        maxTdelta = endChecks - now
         if now.weekday() in daysToRun: #Monday to 
-            while (timeInRange(startChecks,endChecks,now)) and (maxT>freTD):
-                while True:
-                    now = datetime.now()
-                    maxT = endChecks - now
-                    if maxT<freTD:
-                        break
-                    print(f'Running for {maxT}m, checking every {fre}m ....')
-                    _, sent, txt = checkAndTweet(True)
-                    if sent:
-                        quit()
-                    time.sleep(fre*60)
-            else:
-                while True:
-                    now = datetime.now()
-                    fre = 60
-                    maxT = endChecks - now
-                    if (maxT.days > 0) and (maxT < timedelta(minutes=(fre*2))):
-                        fre = maxT.min()
-                    freTD = timedelta(minutes=fre)
-                    print(now.weekday())
-                    if (not(now.weekday() in daysToRun)) or (timeInRange(startChecks,endChecks,now)):
-                        break
-                    print(f'Running for {maxT}m, checking every {fre}m ....')
-                    _, sent, txt = checkAndTweet(True)
-                    if sent:
-                        quit()
-                    time.sleep(fre*60)
+            if (timeInRange(startChecks,endChecks,now)):
+                maxTdelta = endChecks - now
+                maxT = maxTdelta.total_seconds() / 60
+                fre = 10
+                _, sent, txt = runCheckAndTweet(maxT, fre)
+                # while True:
+                #     now = datetime.now()
+                #     maxT = endChecks - now
+                #     if maxT<freTD:
+                #         break
+                #     print(f'Running for {maxT}m, checking every {fre}m ....')
+                #     _, sent, txt = checkAndTweet(True)
+                if sent:
+                    quit()
+                    # time.sleep(fre*60)
+            elif now < startChecks:
+                now = datetime.now()
+                fre = 60
+                maxTdelta = startChecks - now
+                maxT = maxTdelta.total_seconds() / 60
+                if maxT < fre:
+                    fre = maxT - 1
+                _, sent, txt = runCheckAndTweet(maxT, fre)
+                if sent:
+                    quit()
+            elif now > endChecks:
+                print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
+                quit()
+            
+            # while True:
+            #     now = datetime.now()
+            #     fre = 60
+            #     maxT = endChecks - now
+            #     if (maxT.days > 0) and (maxT < timedelta(minutes=(fre*2))):
+            #         fre = maxT.min()
+            #     freTD = timedelta(minutes=fre)
+            #     print(now.weekday())
+            #     if (not(now.weekday() in daysToRun)) or (timeInRange(startChecks,endChecks,now)):
+            #         break
+            #     print(f'Running for {maxT}m, checking every {fre}m ....')
+            #     _, sent, txt = checkAndTweet(True)
+            #     if sent:
+            #         quit()
+            #     time.sleep(fre*60)
             
         else:
             dayText = weekDays[now.weekday()]
