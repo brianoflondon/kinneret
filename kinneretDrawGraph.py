@@ -334,6 +334,9 @@ def drawKinGraph():
 
     # Second and third traces
     fig = addChangeTriangles(fig, True, df, 1)
+    # Second and third traces
+    fig = addChangeTriangles(fig, True, df, 7)
+    
     # Fourth Trace line
     fig.add_trace(go.Scatter(x=df.index, y=df['level'],
                              name='Level',
@@ -380,8 +383,8 @@ def drawKinGraph():
         visible=True
     ))
 
-    allTrue = [True] * 5
-    allFalse = [False] * 5
+    # allTrue = [True] * 5
+    # allFalse = [False] * 5
 
     # https://plotly.com/python/custom-buttons/
     fig.update_layout(
@@ -396,13 +399,16 @@ def drawKinGraph():
                 buttons=list([
                     dict(label="Simple Line",
                          method="restyle",
-                         args=[{"visible": [False, False, False, True]}]),
-                    dict(label="Change Arrows",
+                         args=[{"visible": [False, False, False, False, False, False, True]}]),
+                    dict(label="Change Arrows 1 Day",
                          method="restyle",
-                         args=[{"visible": [True, True, True, False]}]),
-                    dict(label="Both",
+                         args=[{"visible": [True, True, True, False, False, False, False]}]),
+                    dict(label="Change Arrows 7 Day",
                          method="restyle",
-                         args=[{"visible": [True, True, True, True]}])
+                         args=[{"visible": [False, False, False, True, True, True, False]}]),
+                    dict(label="Change 1Day & Line",
+                         method="restyle",
+                         args=[{"visible": [True, True, True, False, False, False, True]}])
                 ]),
             ),
             dict(
