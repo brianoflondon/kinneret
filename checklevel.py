@@ -42,7 +42,7 @@ my_parser.add_argument('-v',
 my_parser.add_argument('-a',
                        '--auto',
                        action='store_true', required=False,
-                       default=False,
+                       default=True,
                        help='Automatic starts up and waits till 11:00 then checks every 10m until 12:15 then checks every 2 hours again')
 
 # my_parser.add_argument('-h',
@@ -76,7 +76,7 @@ else:
     sent = False
     weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
     while True:
-        daysToRun = (0,1,2,3,6)
+        daysToRun = (0,1,2,3,4,6)
         fre = 10
         freTD = timedelta(minutes=fre)
         now = datetime.now()
@@ -92,16 +92,10 @@ else:
                 maxT = maxTdelta.total_seconds() / 60
                 fre = 10
                 _, sent, txt = runCheckAndTweet(maxT, fre)
-                # while True:
-                #     now = datetime.now()
-                #     maxT = endChecks - now
-                #     if maxT<freTD:
-                #         break
-                #     print(f'Running for {maxT}m, checking every {fre}m ....')
-                #     _, sent, txt = checkAndTweet(True)
+
                 if sent:
                     quit()
-                    # time.sleep(fre*60)
+
             elif now < startChecks:
                 now = datetime.now()
                 fre = 60
@@ -115,22 +109,7 @@ else:
             elif now > endChecks:
                 print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
                 quit()
-            
-            # while True:
-            #     now = datetime.now()
-            #     fre = 60
-            #     maxT = endChecks - now
-            #     if (maxT.days > 0) and (maxT < timedelta(minutes=(fre*2))):
-            #         fre = maxT.min()
-            #     freTD = timedelta(minutes=fre)
-            #     print(now.weekday())
-            #     if (not(now.weekday() in daysToRun)) or (timeInRange(startChecks,endChecks,now)):
-            #         break
-            #     print(f'Running for {maxT}m, checking every {fre}m ....')
-            #     _, sent, txt = checkAndTweet(True)
-            #     if sent:
-            #         quit()
-            #     time.sleep(fre*60)
+
             
         else:
             dayText = weekDays[now.weekday()]
