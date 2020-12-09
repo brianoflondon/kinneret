@@ -54,6 +54,13 @@ my_parser.add_argument('-a',
                        default=True,
                        help='Automatic starts up and waits till 11:00 then checks every 10m until 12:15 then checks every 2 hours again')
 
+my_parser.add_argument('-c',
+                       '--commit',
+                       action='store_true', required=False,
+                       default=False,
+                       help='Run a Git Commit and Git Push')
+
+
 # my_parser.add_argument('-h',
 #                        '--help',
 #                        action='help',
@@ -64,6 +71,8 @@ my_parser.add_argument('-a',
 args = my_parser.parse_args()
 myArgs = vars(args)
 
+if myArgs['commit'] is True:
+    githubUpdate()
 
 
 if myArgs['auto'] is False:
@@ -82,8 +91,6 @@ if myArgs['auto'] is False:
 
 
 else:
-    githubUpdate()
-    quit() 
     sent = False
     weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
     while True:
@@ -105,6 +112,7 @@ else:
                 _, sent, txt = runCheckAndTweet(maxT, fre)
 
                 if sent:
+                    githubUpdate()
                     quit()
 
             elif now < startChecks:
@@ -116,6 +124,7 @@ else:
                     fre = maxT - 1
                 _, sent, txt = runCheckAndTweet(maxT, fre)
                 if sent:
+                    githubUpdate()
                     quit()
             elif now > endChecks:
                 print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
