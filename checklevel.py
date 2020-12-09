@@ -14,6 +14,14 @@ def timeInRange(start, end, x):
         return start.time() <= x.time() <= end.time()
     else:
         return start.time() <= x.time() or x.time() <= end.time()
+    
+def githubUpdate():
+    """ Git Commit and update after running """
+    datestamp = datetime.now()
+    comMes = f'Auto Commit {datestamp}'
+    os.system(f'git commit -a -m "{comMes}"')
+
+    
 
 # Create the parser
 my_parser = argparse.ArgumentParser(prog='checklevel',
@@ -72,7 +80,9 @@ if myArgs['auto'] is False:
 
 
 
-else: 
+else:
+    githubUpdate()
+    quit() 
     sent = False
     weekDays = ("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
     while True:
