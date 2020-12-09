@@ -58,7 +58,7 @@ my_parser.add_argument('-c',
                        '--commit',
                        action='store_true', required=False,
                        default=False,
-                       help='Run a Git Commit and Git Push')
+                       help='Run a Git Commit and Git Push and nothing else')
 
 
 # my_parser.add_argument('-h',
@@ -73,7 +73,7 @@ myArgs = vars(args)
 
 if myArgs['commit'] is True:
     githubUpdate()
-
+    quit()
 
 if myArgs['auto'] is False:
     fre = myArgs['frequency']
