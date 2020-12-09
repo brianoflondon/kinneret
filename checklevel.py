@@ -20,6 +20,7 @@ def githubUpdate():
     datestamp = datetime.now()
     comMes = f'Auto Commit {datestamp}'
     os.system(f'git commit -a -m "{comMes}"')
+    os.system(f'git push')
 
     
 
