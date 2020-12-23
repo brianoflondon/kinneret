@@ -3,7 +3,6 @@
 /data
 /gathered
 /gathered-1
-/getNewReading.py
 /govil_kin.html
 /kin.ipyngit
 /kinWaterAuth.py
@@ -22,3 +21,4 @@ old_logs/new_items_added.log
 readlog.py
 old_logs/getNewReading_2020-11-19.log
 sftpconnect.py
+kin.html
