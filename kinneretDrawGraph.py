@@ -62,7 +62,8 @@ def setupDataFrames(dateFr=None, dateTo=None):
 
     df['year'] = df.index.year
     df['month'] = df.index.month
-    df['week'] = df.index.week
+    # df['week'] = df.index.week    #Depreciated function
+    df['week'] = df.index.isocalendar().week
     df['day'] = df.index.day
     df['weekday'] = df.index.weekday
     df['hebyear'] = [getHebYear(d) for d in df.index]
