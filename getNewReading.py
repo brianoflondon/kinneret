@@ -55,9 +55,11 @@ def pageChangeCheck(df, skipUrl=0):
 
     session = HTMLSession()
     r = session.get(fetchUrl)
-    logger.info(fetchUrl, r.text)
+    logStr = f'Fetch:  {fetchUrl} - {r}'
+    logger.info(logStr)
     r.html.render(keep_page=True)
-    logger.info(fetchUrl, r.text)
+    logStr = f'Render: {fetchUrl} - {r}'
+    logger.info(logStr)
 
     # raise Exception("Halt and Catch Fire")
 
