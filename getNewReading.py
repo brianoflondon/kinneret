@@ -14,7 +14,7 @@ import logging
 import random
 import re
 from itertools import zip_longest
-
+import math
 import kinneretDrawGraph as kdg
 import twitter.postToTwitter as tw
 
@@ -23,28 +23,30 @@ outputDateFormat = '%Y-%m-%d'
 baseUrl = 'https://www.gov.il/he/Departments/DynamicCollectors/kinneret_level'
 paramUrl = '?skip='
 
+colHead = ['level','1day','7day','1month']
+
 upRedLine = -208.8
 histMin = -214.87
+
 
 
 def getDataFileName():
     """ Return the filename """
     outputFol = 'data'
-    outputFile = 'levels-pd'
+    outputFile = 'levels-pd-calc'
     dataFile = f'{outputFol}/{outputFile}.csv'
     return dataFile
 
 
 def importReadings():
     """ Import history to date and return the Pandas Dataset """
+    """ Updating to import 1,7 & 30 day look back """
     dataFile = getDataFileName()
 
     def d_parser(x): return datetime.strptime(x, outputDateFormat)
-
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     df.set_index('date', inplace=True)
-    df['7day'] = df['level'].diff(periods=-7)
-
+    # df['7day'] = df['level'].diff(periods=-7)
     return df
 
 
@@ -129,6 +131,7 @@ def updateLevels():
                     logger.info(f'{xDate} - already in data {dfLev}')
                     logger.info(f'{dDate} - {xLevel} - {dfLev}')
                 else:
+                    # This is where i need to add the 1day 7day 1month look back data.
                     newRow = pd.Series(data={'level': xLevel}, name=dDate)
                     df = df.append(newRow, ignore_index=False)
                     logger.info(f'Adding: {dDate} {newRow}')
@@ -137,11 +140,34 @@ def updateLevels():
 
     if countnewItems > 0:
         dataFile = getDataFileName()
+        df = updateCalcValues(df)
         df.sort_values(by='date', inplace=True, ascending=False)
-        df.to_csv(dataFile, index_label='date', columns=['level'])
-        df['7day'] = df['level'].diff(periods=-7)
+        df.round({'1day': 3,'7day': 3, '1month': 3}).to_csv(dataFile, index_label='date', columns=colHead)
+        # df.to_csv(dataFile, index_label='date', columns=['level'])
+        # df['7day'] = df['level'].diff(periods=-7)
 
     return countnewItems, df
+
+def naCheckDelta(df,x,y,dateOff):
+    """ Returns the delta value for this offset first checking if the y value is NAN """
+    if math.isnan(y):
+        return(kdg.getLevelDelta(df,x,dateOff))
+    else:
+        return y
+
+
+def updateCalcValues(df):
+    """ Updates the 1day 7day and 1month calc values in the Dataframe
+        Only updating what has changed. """
+
+    dateOff1m = pd.DateOffset(months=-1)
+    dateOff7d = pd.DateOffset(days=-7)
+    dateOff1d = pd.DateOffset(days=-1)
+    
+    df['1day'] = [naCheckDelta(df,x,y,dateOff1d) for x,y in zip(df.index,df['1day'])]
+    df['7day'] = [naCheckDelta(df,x,y,dateOff7d) for x,y in zip(df.index,df['7day'])]
+    df['1month'] = [naCheckDelta(df,x,y,dateOff1m) for x,y in zip(df.index,df['1month'])]    
+    return df
 
 
 def checkAndTweet(sendNow=False):
