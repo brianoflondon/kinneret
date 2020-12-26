@@ -29,7 +29,6 @@ upRedLine = -208.8
 histMin = -214.87
 
 
-
 def getDataFileName():
     """ Return the filename """
     outputFol = 'data'
@@ -140,9 +139,10 @@ def updateLevels():
 
     if countnewItems > 0:
         dataFile = getDataFileName()
-        df = updateCalcValues(df)
+        # df = updateCalcValues(df)
         df.sort_values(by='date', inplace=True, ascending=False)
         df.round({'1day': 3,'7day': 3, '1month': 3}).to_csv(dataFile, index_label='date', columns=colHead)
+        updateCalcValues(dataFile)
         # df.to_csv(dataFile, index_label='date', columns=['level'])
         # df['7day'] = df['level'].diff(periods=-7)
 
@@ -159,14 +159,14 @@ def naCheckDelta(df,x,y,dateOff):
 def updateCalcValues(df):
     """ Updates the 1day 7day and 1month calc values in the Dataframe
         Only updating what has changed. """
-
+        
     dateOff1m = pd.DateOffset(months=-1)
     dateOff7d = pd.DateOffset(days=-7)
     dateOff1d = pd.DateOffset(days=-1)
     
     df['1day'] = [naCheckDelta(df,x,y,dateOff1d) for x,y in zip(df.index,df['1day'])]
     df['7day'] = [naCheckDelta(df,x,y,dateOff7d) for x,y in zip(df.index,df['7day'])]
-    df['1month'] = [naCheckDelta(df,x,y,dateOff1m) for x,y in zip(df.index,df['1month'])]    
+    df['1month'] = [naCheckDelta(df,x,y,dateOff1m) for x,y in zip(df.index,df['1month'])]
     return df
 
 
@@ -273,8 +273,8 @@ def testMultiTweet():
 
 
 if __name__ == "__main__":
-    df, sent, txt = runCheckAndTweet(1, 0.5)
-    # df, sent, txt = checkAndTweet(False)
+    # df, sent, txt = runCheckAndTweet(1, 0.5)
+    df, sent, txt = checkAndTweet(False)
     # testMultiTweet()
 
 # for y in range(0,100):
