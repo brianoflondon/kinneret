@@ -139,10 +139,10 @@ def updateLevels():
 
     if countnewItems > 0:
         dataFile = getDataFileName()
-        # df = updateCalcValues(df)
+
         df.sort_values(by='date', inplace=True, ascending=False)
+        df = updateCalcValues(df)
         df.round({'1day': 3,'7day': 3, '1month': 3}).to_csv(dataFile, index_label='date', columns=colHead)
-        updateCalcValues(dataFile)
         # df.to_csv(dataFile, index_label='date', columns=['level'])
         # df['7day'] = df['level'].diff(periods=-7)
 
@@ -273,8 +273,8 @@ def testMultiTweet():
 
 
 if __name__ == "__main__":
-    # df, sent, txt = runCheckAndTweet(1, 0.5)
-    df, sent, txt = checkAndTweet(False)
+    df, sent, txt = runCheckAndTweet(1, 0.5)
+    # df, sent, txt = checkAndTweet(False)
     # testMultiTweet()
 
 # for y in range(0,100):

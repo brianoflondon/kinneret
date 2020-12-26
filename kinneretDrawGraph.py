@@ -68,8 +68,8 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['weekday'] = df.index.weekday
     df['hebyear'] = [getHebYear(d) for d in df.index]
 
-    df['7day'] = df['level'].diff(periods=-7) * 100
-    df['1month'] = df['level'].diff(periods=-30) * 100
+    # df['7day'] = df['level'].diff(periods=-7) * 100
+    # df['1month'] = df['level'].diff(periods=-30) * 100
 
     # df['check']= [a-b for a,b in zip(df['1monthAc'],df['1month'])]
 
