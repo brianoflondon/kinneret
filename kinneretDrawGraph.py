@@ -52,12 +52,7 @@ def setupDataFrames(dateFr=None, dateTo=None):
     # df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     # df.set_index('date', inplace=True)
     df = gnr.importReadings()
-    print(df)
-    upsampled = df.resample('1D')
-    df = upsampled.interpolate(method='linear')
-    print(df)
-    df.sort_values(by='date', ascending=False, inplace=True)
-    print(df)
+    df['real'] = True
     # Filter by dates if we want a limited subset
     if dateFr is not None:
         filt = df.index >= dateFr
@@ -65,6 +60,13 @@ def setupDataFrames(dateFr=None, dateTo=None):
     if dateTo is not None:
         filt = df.index <= dateTo
         df = df[filt]
+
+    # Fill in the blanks.
+    upsampled = df.resample('1D')
+    df = upsampled.interpolate(method='cubicspline')
+    df.fillna(value=False, inplace=True)
+    df.sort_values(by='date', ascending=False, inplace=True)
+
 
     df['year'] = df.index.year
     df['month'] = df.index.month
@@ -330,8 +332,9 @@ def rangeButtons(steps=None):
 def drawKinGraph():
     """ Draw the graph """
     # Global Filter
-    dateFrom = datetime(1966, 1, 1)
-    df = setupDataFrames(dateFrom)
+    dateFrom = datetime(1966, 6, 1)
+    dateTo = datetime(1969,12,31)
+    df = setupDataFrames(dateFrom,dateTo)
     dfmin, dfmax = fillMinMax(df)
 
     # First line
@@ -624,14 +627,13 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
 
 
     df[dCol] = df['level'].diff(periods=-period) * 100
-    
-    print(df)
+
     df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
         lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]
 
-    filtUp = df[dCol] > 0
-    filtLv = df[dCol] == 0
-    filtDn = df[dCol] < 0
+    filtUp = ((df[dCol] > 0) & (df['real']))
+    filtLv = ((df[dCol] == 0) & (df['real']))
+    filtDn = ((df[dCol] < 0) & (df['real']))
 
     if plotLevel is True:
         yValsU = df[filtUp]['level']
@@ -748,7 +750,7 @@ if __name__ == "__main__":
     # print(df.describe())
 
     df = drawKinGraph()
-    drawChangesGraph()
+    # drawChangesGraph()
     # uploadGraphs()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
