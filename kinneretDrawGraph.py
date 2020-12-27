@@ -87,7 +87,6 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['YearSeas'] = [f'{yr}-s' if mth > 5 else f'{yr}-w' for mth,
                       yr in zip(df['month'], df['year'])]
     df['season'] = ['s' if mth > 5 else 'w' for mth in df['month']]
-    print(df.head(50))
     return df
 
 
@@ -333,8 +332,8 @@ def drawKinGraph():
     """ Draw the graph """
     # Global Filter
     dateFrom = datetime(1966, 6, 1)
-    dateTo = datetime(1969,12,31)
-    df = setupDataFrames(dateFrom,dateTo)
+    # dateTo = datetime(1969,12,31)
+    df = setupDataFrames(dateFrom)
     dfmin, dfmax = fillMinMax(df)
 
     # First line
@@ -405,7 +404,7 @@ def drawKinGraph():
                 name="Markers",
                 direction="right",
                 active=0,
-                x=0.4,
+                x=0.5,
                 y=1.1,
                 buttons=list([
                     dict(label="Line",
@@ -431,7 +430,7 @@ def drawKinGraph():
                 name="Annotations",
                 direction="right",
                 active=0,
-                x=0.7,
+                x=0.8,
                 y=1.1,
                 buttons=list([
                     dict(label="None",
@@ -461,7 +460,7 @@ def drawKinGraph():
                 name="Lines",
                 direction="right",
                 active=0,
-                x=0.7,
+                x=0.8,
                 y=1.05,
                 buttons=list([
                     dict(label="None ",
@@ -545,11 +544,9 @@ def drawChangesGraph(df=None, period=7):
     i = 0
     for p in periods:
         dCol = f'{p}day'
-        df[dCol] = df['level'].diff(periods=-period) * 100
-                
+        df[dCol] = df['level'].diff(periods=-period) * 100         
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
-    print(df)
     if 365 in periods:
         dateOff = pd.DateOffset(years=-1)
         df['365day'] = [100 * getLevelDelta(df, i, dateOff) for i in df.index]
@@ -756,8 +753,8 @@ if __name__ == "__main__":
     # print(df.describe())
 
     df = drawKinGraph()
-    # drawChangesGraph()
-    # uploadGraphs()
+    drawChangesGraph(df)
+    uploadGraphs()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
     # drawChangesGraph(period=30)
