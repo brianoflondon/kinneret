@@ -46,6 +46,9 @@ def importReadings():
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     df.set_index('date', inplace=True)
     # df['7day'] = df['level'].diff(periods=-7)
+    
+    df = df.resample('1D')
+    df = df.interpolate(method='linear')
     return df
 
 

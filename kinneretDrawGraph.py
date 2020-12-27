@@ -17,13 +17,14 @@ import chart_studio.plotly as cs_py
 import json
 from sftpconnect import connectSFTP
 import pysftp
+import getNewReading as gnr
 
 upperRedLine = -208.8
 lowerRedLine = -213.0
 histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
-dataFile = 'data/levels-pd-calc.csv'
+# dataFile = 'data/levels-pd-calc.csv'
 todayDate = datetime.now()
 chartTitle = f"""
 Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>
@@ -48,9 +49,11 @@ def getLevelDelta(df, ind, dateOff):
 
 def setupDataFrames(dateFr=None, dateTo=None):
     """ Set up the global dataframe with all the main data """
-    df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
-    df.set_index('date', inplace=True)
-    df.sort_values(by='date', ascending=False, inplace=True)
+    # df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
+    # df.set_index('date', inplace=True)
+    # df.sort_values(by='date', ascending=False, inplace=True)
+
+    df = gnr.importReadings()
 
     # Filter by dates if we want a limited subset
     if dateFr is not None:
@@ -79,6 +82,7 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['YearSeas'] = [f'{yr}-s' if mth > 5 else f'{yr}-w' for mth,
                       yr in zip(df['month'], df['year'])]
     df['season'] = ['s' if mth > 5 else 'w' for mth in df['month']]
+    print(df.head(50))
     return df
 
 
@@ -524,26 +528,27 @@ def addBolAvatar(fig):
 def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
     periods = [1, 7, 30, 60, 365]
+    periods = [1]
     if df is None:
         df = setupDataFrames(dateFr='2015-1-1')
 
     figch = go.Figure()
     i = 0
     for p in periods:
-        dCol = f'{p}day'
+        dCol = f'{p}day-cm'
         # Special case for period = 7 or 30
-        if period == 1:
+        if p == 1:
             df[dCol] = df['1day'] * 100  
-        elif period == 7:
+        elif p == 7:
             df[dCol] = df['7day'] * 100  
-        elif period == 30:
+        elif p == 30:
             df[dCol] = df['1month'] * 100
         else:
             df[dCol] = df['level'].diff(periods=-period) * 100
                 
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
-
+    print(df)
     if 365 in periods:
         dateOff = pd.DateOffset(years=-1)
         df['365day'] = [100 * getLevelDelta(df, i, dateOff) for i in df.index]
@@ -744,7 +749,7 @@ redDn = [[0, 'rgb(199, 68, 124)'],
 
 if __name__ == "__main__":
 
-    df = setupDataFrames()
+    # df = setupDataFrames()
 
     # dateOff = pd.DateOffset(years=-2)
     # oldLevel = getLevelDelta(df,df.index[0],dateOff)
