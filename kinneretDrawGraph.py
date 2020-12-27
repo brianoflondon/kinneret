@@ -24,7 +24,7 @@ lowerRedLine = -213.0
 histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
-# dataFile = 'data/levels-pd-calc.csv'
+# dataFile = 'data/levels-pd.csv'
 todayDate = datetime.now()
 chartTitle = f"""
 Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>
@@ -54,6 +54,9 @@ def setupDataFrames(dateFr=None, dateTo=None):
     # df.sort_values(by='date', ascending=False, inplace=True)
 
     df = gnr.importReadings()
+
+    upsampled = df.resample('1D')
+    df = upsampled.interpolate(method='linear')
 
     # Filter by dates if we want a limited subset
     if dateFr is not None:
@@ -528,23 +531,15 @@ def addBolAvatar(fig):
 def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
     periods = [1, 7, 30, 60, 365]
-    periods = [1]
+    # periods = [1]
     if df is None:
         df = setupDataFrames(dateFr='2015-1-1')
 
     figch = go.Figure()
     i = 0
     for p in periods:
-        dCol = f'{p}day-cm'
-        # Special case for period = 7 or 30
-        if p == 1:
-            df[dCol] = df['1day'] * 100  
-        elif p == 7:
-            df[dCol] = df['7day'] * 100  
-        elif p == 30:
-            df[dCol] = df['1month'] * 100
-        else:
-            df[dCol] = df['level'].diff(periods=-period) * 100
+        dCol = f'{p}day'
+        df[dCol] = df['level'].diff(periods=-period) * 100
                 
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
@@ -627,15 +622,8 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
 
-    # Special case for period = 7 or 30
-    if period == 1:
-        df[dCol] = df['1day'] * 100
-    elif period == 7:
-        df[dCol] = df['7day'] * 100  
-    elif period == 30:
-        df[dCol] = df['1month'] * 100
-    else:
-        df[dCol] = df['level'].diff(periods=-period) * 100
+
+    df[dCol] = df['level'].diff(periods=-period) * 100
         
     df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
         lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]

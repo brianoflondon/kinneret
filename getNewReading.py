@@ -45,10 +45,9 @@ def importReadings():
     def d_parser(x): return datetime.strptime(x, outputDateFormat)
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     df.set_index('date', inplace=True)
-    # df['7day'] = df['level'].diff(periods=-7)
+    df.sort_values(by='date', inplace=True, ascending=False)
+    df['7day'] = df['level'].diff(periods=-7)
     
-    df = df.resample('1D')
-    df = df.interpolate(method='linear')
     return df
 
 
@@ -144,10 +143,10 @@ def updateLevels():
         dataFile = getDataFileName()
 
         df.sort_values(by='date', inplace=True, ascending=False)
-        df = updateCalcValues(df)
-        df.round({'1day': 3,'7day': 3, '1month': 3}).to_csv(dataFile, index_label='date', columns=colHead)
-        # df.to_csv(dataFile, index_label='date', columns=['level'])
-        # df['7day'] = df['level'].diff(periods=-7)
+        # df = updateCalcValues(df)
+        # df.round({'1day': 3,'7day': 3, '1month': 3}).to_csv(dataFile, index_label='date', columns=colHead)
+        df.to_csv(dataFile, index_label='date', columns=['level'])
+        df['7day'] = df['level'].diff(periods=-7)
 
     return countnewItems, df
 
@@ -277,7 +276,7 @@ def testMultiTweet():
 
 if __name__ == "__main__":
     # df, sent, txt = runCheckAndTweet(1, 0.5)
-    df, sent, txt = checkAndTweet(False)
+    df, sent, txt = checkAndTweet(True)
     # testMultiTweet()
 
 # for y in range(0,100):
