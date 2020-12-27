@@ -17,13 +17,14 @@ import chart_studio.plotly as cs_py
 import json
 from sftpconnect import connectSFTP
 import pysftp
+import getNewReading as gnr
 
 upperRedLine = -208.8
 lowerRedLine = -213.0
 histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
-dataFile = 'data/levels-pd.csv'
+# dataFile = 'data/levels-pd.csv'
 todayDate = datetime.now()
 chartTitle = f"""
 Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>
@@ -48,10 +49,10 @@ def getLevelDelta(df, ind, dateOff):
 
 def setupDataFrames(dateFr=None, dateTo=None):
     """ Set up the global dataframe with all the main data """
-    df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
-    df.set_index('date', inplace=True)
-    df.sort_values(by='date', ascending=False, inplace=True)
-
+    # df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
+    # df.set_index('date', inplace=True)
+    df = gnr.importReadings()
+    df['real'] = True
     # Filter by dates if we want a limited subset
     if dateFr is not None:
         filt = df.index >= dateFr
@@ -59,6 +60,13 @@ def setupDataFrames(dateFr=None, dateTo=None):
     if dateTo is not None:
         filt = df.index <= dateTo
         df = df[filt]
+
+    # Fill in the blanks.
+    upsampled = df.resample('1D')
+    df = upsampled.interpolate(method='cubicspline')
+    df.fillna(value=False, inplace=True)
+    df.sort_values(by='date', ascending=False, inplace=True)
+
 
     df['year'] = df.index.year
     df['month'] = df.index.month
@@ -68,8 +76,8 @@ def setupDataFrames(dateFr=None, dateTo=None):
     df['weekday'] = df.index.weekday
     df['hebyear'] = [getHebYear(d) for d in df.index]
 
-    df['7day'] = df['level'].diff(periods=-7) * 100
-    df['1month'] = df['level'].diff(periods=-30) * 100
+    # df['7day'] = df['level'].diff(periods=-7) * 100
+    # df['1month'] = df['level'].diff(periods=-30) * 100
 
     # df['check']= [a-b for a,b in zip(df['1monthAc'],df['1month'])]
 
@@ -323,7 +331,8 @@ def rangeButtons(steps=None):
 def drawKinGraph():
     """ Draw the graph """
     # Global Filter
-    dateFrom = datetime(1966, 1, 1)
+    dateFrom = datetime(1966, 6, 1)
+    # dateTo = datetime(1969,12,31)
     df = setupDataFrames(dateFrom)
     dfmin, dfmax = fillMinMax(df)
 
@@ -391,25 +400,29 @@ def drawKinGraph():
     fig.update_layout(
         updatemenus=[
             dict(
-                type="dropdown",
+                type="buttons",
                 name="Markers",
-                direction="down",
-                active=1,
-                x=0.4,
+                direction="right",
+                active=0,
+                x=0.5,
                 y=1.1,
                 buttons=list([
-                    dict(label="Simple Line",
+                    dict(label="Line",
                          method="restyle",
                          args=[{"visible": [False, False, False, False, False, False, True]}]),
-                    dict(label="Change Arrows 1 Day",
+                    dict(label="▲ 1 Day 📉",
+                         method="restyle",
+                         args=[{"visible": [True, True, True, False, False, False, True]}]),
+                    dict(label="▲ 7 Day 📉",
+                         method="restyle",
+                         args=[{"visible": [False, False, False, True, True, True, True]}]),
+                    dict(label="▲ 1 Day",
                          method="restyle",
                          args=[{"visible": [True, True, True, False, False, False, False]}]),
-                    dict(label="Change Arrows 7 Day",
+                    dict(label="▲ 7 Day",
                          method="restyle",
-                         args=[{"visible": [False, False, False, True, True, True, False]}]),
-                    dict(label="Change 1Day & Line",
-                         method="restyle",
-                         args=[{"visible": [True, True, True, False, False, False, True]}])
+                         args=[{"visible": [False, False, False, True, True, True, False]}])
+
                 ]),
             ),
             dict(
@@ -417,7 +430,7 @@ def drawKinGraph():
                 name="Annotations",
                 direction="right",
                 active=0,
-                x=0.7,
+                x=0.8,
                 y=1.1,
                 buttons=list([
                     dict(label="None",
@@ -447,7 +460,7 @@ def drawKinGraph():
                 name="Lines",
                 direction="right",
                 active=0,
-                x=0.7,
+                x=0.8,
                 y=1.05,
                 buttons=list([
                     dict(label="None ",
@@ -500,7 +513,6 @@ def drawKinGraph():
     pio.write_html(
         fig, file='brianoflondon_site/kinneret_level.html', auto_open=True)
     fig.write_image('brianoflondon_site/kinneret_level.png',
-                   
                     engine="kaleido", width=1920, height=1080)
     # chartStudioCreds()
 
@@ -524,6 +536,7 @@ def addBolAvatar(fig):
 def drawChangesGraph(df=None, period=7):
     """ Draws a graph of the change over the last period days """
     periods = [1, 7, 30, 60, 365]
+    # periods = [1]
     if df is None:
         df = setupDataFrames(dateFr='2015-1-1')
 
@@ -531,10 +544,9 @@ def drawChangesGraph(df=None, period=7):
     i = 0
     for p in periods:
         dCol = f'{p}day'
-        df[dCol] = df['level'].diff(periods=-p) * 100
+        df[dCol] = df['level'].diff(periods=-period) * 100         
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
-
     if 365 in periods:
         dateOff = pd.DateOffset(years=-1)
         df['365day'] = [100 * getLevelDelta(df, i, dateOff) for i in df.index]
@@ -613,13 +625,15 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
 
+
     df[dCol] = df['level'].diff(periods=-period) * 100
+
     df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
         lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]
 
-    filtUp = df[dCol] > 0
-    filtLv = df[dCol] == 0
-    filtDn = df[dCol] < 0
+    filtUp = ((df[dCol] > 0) & (df['real']))
+    filtLv = ((df[dCol] == 0) & (df['real']))
+    filtDn = ((df[dCol] < 0) & (df['real']))
 
     if plotLevel is True:
         yValsU = df[filtUp]['level']
@@ -633,6 +647,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     colD = df[filtDn][dCol]
 
     figch.add_trace(go.Scatter(x=df[filtUp].index, y=yValsU,
+                               visible = False,
                                meta=period,
                                text=df[filtUp]['hovtext'],
                                hovertemplate='%{text}',
@@ -650,6 +665,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtLv].index, y=yValsL,
+                               visible = False,
                                meta=period,
                                text=df[filtLv]['hovtext'],
                                hovertemplate='%{text}',
@@ -666,6 +682,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtDn].index, y=yValsD,
+                               visible=False,
                                meta=period,
                                text=df[filtDn]['hovtext'],
                                hovertemplate='%{text}',
@@ -726,7 +743,7 @@ redDn = [[0, 'rgb(199, 68, 124)'],
 
 if __name__ == "__main__":
 
-    df = setupDataFrames()
+    # df = setupDataFrames()
 
     # dateOff = pd.DateOffset(years=-2)
     # oldLevel = getLevelDelta(df,df.index[0],dateOff)
@@ -736,7 +753,7 @@ if __name__ == "__main__":
     # print(df.describe())
 
     df = drawKinGraph()
-    drawChangesGraph()
+    drawChangesGraph(df)
     uploadGraphs()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)

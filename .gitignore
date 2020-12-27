@@ -1,6 +1,5 @@
 /.DS_Store
 /.vscode
-/data
 /gathered
 /gathered-1
 /govil_kin.html
@@ -22,3 +21,7 @@ readlog.py
 old_logs/getNewReading_2020-11-19.log
 sftpconnect.py
 kin.html
+.gitignore
+data/.DS_Store
+__pycache__/
+twitter/__pycache__
