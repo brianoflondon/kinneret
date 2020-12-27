@@ -51,13 +51,13 @@ def setupDataFrames(dateFr=None, dateTo=None):
     """ Set up the global dataframe with all the main data """
     # df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     # df.set_index('date', inplace=True)
-    # df.sort_values(by='date', ascending=False, inplace=True)
-
     df = gnr.importReadings()
-
+    print(df)
     upsampled = df.resample('1D')
     df = upsampled.interpolate(method='linear')
-
+    print(df)
+    df.sort_values(by='date', ascending=False, inplace=True)
+    print(df)
     # Filter by dates if we want a limited subset
     if dateFr is not None:
         filt = df.index >= dateFr
@@ -624,7 +624,8 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
 
 
     df[dCol] = df['level'].diff(periods=-period) * 100
-        
+    
+    print(df)
     df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
         lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]
 

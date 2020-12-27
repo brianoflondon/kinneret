@@ -32,21 +32,20 @@ histMin = -214.87
 def getDataFileName():
     """ Return the filename """
     outputFol = 'data'
-    outputFile = 'levels-pd-calc'
+    outputFile = 'levels-pd'
     dataFile = f'{outputFol}/{outputFile}.csv'
     return dataFile
 
 
 def importReadings():
     """ Import history to date and return the Pandas Dataset """
-    """ Updating to import 1,7 & 30 day look back """
     dataFile = getDataFileName()
 
     def d_parser(x): return datetime.strptime(x, outputDateFormat)
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     df.set_index('date', inplace=True)
     df.sort_values(by='date', inplace=True, ascending=False)
-    df['7day'] = df['level'].diff(periods=-7)
+    # df['7day'] = df['level'].diff(periods=-7)
     
     return df
 
@@ -146,7 +145,7 @@ def updateLevels():
         # df = updateCalcValues(df)
         # df.round({'1day': 3,'7day': 3, '1month': 3}).to_csv(dataFile, index_label='date', columns=colHead)
         df.to_csv(dataFile, index_label='date', columns=['level'])
-        df['7day'] = df['level'].diff(periods=-7)
+        # df['7day'] = df['level'].diff(periods=-7)
 
     return countnewItems, df
 
