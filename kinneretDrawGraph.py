@@ -401,25 +401,29 @@ def drawKinGraph():
     fig.update_layout(
         updatemenus=[
             dict(
-                type="dropdown",
+                type="buttons",
                 name="Markers",
-                direction="down",
-                active=1,
+                direction="right",
+                active=0,
                 x=0.4,
                 y=1.1,
                 buttons=list([
-                    dict(label="Simple Line",
+                    dict(label="Line",
                          method="restyle",
                          args=[{"visible": [False, False, False, False, False, False, True]}]),
-                    dict(label="Change Arrows 1 Day",
+                    dict(label="▲ 1 Day 📉",
+                         method="restyle",
+                         args=[{"visible": [True, True, True, False, False, False, True]}]),
+                    dict(label="▲ 7 Day 📉",
+                         method="restyle",
+                         args=[{"visible": [False, False, False, True, True, True, True]}]),
+                    dict(label="▲ 1 Day",
                          method="restyle",
                          args=[{"visible": [True, True, True, False, False, False, False]}]),
-                    dict(label="Change Arrows 7 Day",
+                    dict(label="▲ 7 Day",
                          method="restyle",
-                         args=[{"visible": [False, False, False, True, True, True, False]}]),
-                    dict(label="Change 1Day & Line",
-                         method="restyle",
-                         args=[{"visible": [True, True, True, False, False, False, True]}])
+                         args=[{"visible": [False, False, False, True, True, True, False]}])
+
                 ]),
             ),
             dict(
@@ -510,7 +514,6 @@ def drawKinGraph():
     pio.write_html(
         fig, file='brianoflondon_site/kinneret_level.html', auto_open=True)
     fig.write_image('brianoflondon_site/kinneret_level.png',
-                   
                     engine="kaleido", width=1920, height=1080)
     # chartStudioCreds()
 
@@ -647,6 +650,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     colD = df[filtDn][dCol]
 
     figch.add_trace(go.Scatter(x=df[filtUp].index, y=yValsU,
+                               visible = False,
                                meta=period,
                                text=df[filtUp]['hovtext'],
                                hovertemplate='%{text}',
@@ -664,6 +668,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtLv].index, y=yValsL,
+                               visible = False,
                                meta=period,
                                text=df[filtLv]['hovtext'],
                                hovertemplate='%{text}',
@@ -680,6 +685,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            )
                                ))
     figch.add_trace(go.Scatter(x=df[filtDn].index, y=yValsD,
+                               visible=False,
                                meta=period,
                                text=df[filtDn]['hovtext'],
                                hovertemplate='%{text}',
