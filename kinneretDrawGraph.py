@@ -23,7 +23,7 @@ lowerRedLine = -213.0
 histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
-dataFile = 'data/levels-pd.csv'
+dataFile = 'data/levels-pd-calc.csv'
 todayDate = datetime.now()
 chartTitle = f"""
 Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>
@@ -531,7 +531,16 @@ def drawChangesGraph(df=None, period=7):
     i = 0
     for p in periods:
         dCol = f'{p}day'
-        df[dCol] = df['level'].diff(periods=-p) * 100
+        # Special case for period = 7 or 30
+        if period == 1:
+            df[dCol] = df['1day'] * 100  
+        elif period == 7:
+            df[dCol] = df['7day'] * 100  
+        elif period == 30:
+            df[dCol] = df['1month'] * 100
+        else:
+            df[dCol] = df['level'].diff(periods=-period) * 100
+                
         figch = addChangeTriangles(figch, False, df, p)
         # vis[]
 
@@ -613,7 +622,16 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
 
-    df[dCol] = df['level'].diff(periods=-period) * 100
+    # Special case for period = 7 or 30
+    if period == 1:
+        df[dCol] = df['1day'] * 100
+    elif period == 7:
+        df[dCol] = df['7day'] * 100  
+    elif period == 30:
+        df[dCol] = df['1month'] * 100
+    else:
+        df[dCol] = df['level'].diff(periods=-period) * 100
+        
     df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
         lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]
 
@@ -737,7 +755,7 @@ if __name__ == "__main__":
 
     df = drawKinGraph()
     drawChangesGraph()
-    uploadGraphs()
+    # uploadGraphs()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
     # drawChangesGraph(period=30)

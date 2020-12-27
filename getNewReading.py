@@ -273,8 +273,8 @@ def testMultiTweet():
 
 
 if __name__ == "__main__":
-    df, sent, txt = runCheckAndTweet(1, 0.5)
-    # df, sent, txt = checkAndTweet(False)
+    # df, sent, txt = runCheckAndTweet(1, 0.5)
+    df, sent, txt = checkAndTweet(False)
     # testMultiTweet()
 
 # for y in range(0,100):
