@@ -621,7 +621,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
         change ploting out the level of the lake 
         If plotLevel is true plot the points at the right level, else
         produce a change graph"""
-    plotInterpolated = True
+    plotInterpolated = False
     dCol = f'{period}day'
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
