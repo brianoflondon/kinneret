@@ -621,6 +621,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
         change ploting out the level of the lake 
         If plotLevel is true plot the points at the right level, else
         produce a change graph"""
+    plotInterpolated = False
     dCol = f'{period}day'
     if df is None:
         df = setupDataFrames(dateFr='2010-1-1')
@@ -634,15 +635,18 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     filtUp = ((df[dCol] > 0) & (df['real']))
     filtLv = ((df[dCol] == 0) & (df['real']))
     filtDn = ((df[dCol] < 0) & (df['real']))
+    filtIn = (df['real'] == False)               # Interpolated points
 
     if plotLevel is True:
         yValsU = df[filtUp]['level']
         yValsL = df[filtLv]['level']
         yValsD = df[filtDn]['level']
+        yValsI = df[filtIn]['level']
     else:
         yValsU = df[filtUp][dCol]
         yValsL = df[filtLv][dCol]
         yValsD = df[filtDn][dCol]
+        yValsI = df[filtIn][dCol]
     colU = df[filtUp][dCol]
     colD = df[filtDn][dCol]
 
@@ -701,6 +705,25 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                            colorbar=dict(x=0.98, y=.23,
                                                          len=0.5))
                                ))
+    if plotInterpolated :
+        # Interpolated points
+        figch.add_trace(go.Scatter(x=df[filtIn].index, y=yValsI,
+                                visible = False,
+                                meta=period,
+                                text=df[filtIn]['hovtext'],
+                                hovertemplate='%{text}',
+                                marker_symbol='circle',
+                                name='No Change',
+                                showlegend=False,
+                                mode='markers',
+                                marker=dict(size=mSize *0.5,
+                                            color='white',
+                                            line=dict(
+                                                color='#0036B2',
+                                                width=2
+                                            )
+                                            )
+                                ))
     return figch
 
 def uploadGraphs():
