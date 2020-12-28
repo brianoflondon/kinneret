@@ -32,9 +32,17 @@ histMin = -214.87
 def getDataFileName():
     """ Return the filename """
     outputFol = 'data'
-    outputFile = 'levels-pd'
-    dataFile = f'{outputFol}/{outputFile}.csv'
-    return dataFile
+    outputFile = 'levels-pd.csv'
+    return relFileName(outputFol,outputFile)
+
+def relFileName(fol,file,ext=''):
+    """ Takes in folder and file and returns full path """
+    dirname = os.path.dirname(__file__)
+    if ext != '':
+        file = f'{file}.{ext}'
+    
+    return os.path.join(dirname, fol, file)
+
 
 
 def importReadings():
@@ -246,7 +254,7 @@ def runCheckAndTweet(maxTime=360, freq=10):
         sleepT = freqSec*fudge
         if sleepT < 0:
             sleepT = 59
-        time.sleep(freqSec*fudge)
+        time.sleep(sleepT)
         elapsed = time.time() - begin
 
     return(df, sent, txt)

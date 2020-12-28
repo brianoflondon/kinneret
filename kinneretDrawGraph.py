@@ -24,7 +24,6 @@ lowerRedLine = -213.0
 histMin = -214.87
 
 outputDateFormat = '%Y-%m-%d'
-# dataFile = 'data/levels-pd.csv'
 todayDate = datetime.now()
 chartTitle = f"""
 Kinneret Level (Sea of Galilee) {todayDate:%d %b %Y}<br>
@@ -509,10 +508,13 @@ def drawKinGraph():
     )
 
     # fig.update_layout(autosize = True, height = 1080, width =1920)
-
+    fold = 'brianoflondon_site'
+    file = 'kinneret_level'
+    fileHtml = gnr.relFileName(fold,file,'html')
+    filePng = gnr.relFileName(fold,file,'png')
     pio.write_html(
-        fig, file='brianoflondon_site/kinneret_level.html', auto_open=True)
-    fig.write_image('brianoflondon_site/kinneret_level.png',
+        fig, file=fileHtml, auto_open=True)
+    fig.write_image(filePng,
                     engine="kaleido", width=1920, height=1080)
     # chartStudioCreds()
 
@@ -609,10 +611,14 @@ def drawChangesGraph(df=None, period=7):
                         selector=dict(meta=1))
     # figch.scatter.update_layout(visible=matrix[0])
 
-    outputF = f'brianoflondon_site/changes'
+    fold = 'brianoflondon_site'
+    file = 'changes'
+    fileHtml = gnr.relFileName(fold,file,'html')
+    filePng = gnr.relFileName(fold,file,'png')
+    
     pio.write_html(
-        figch, file=f'{outputF}.html', auto_open=True)
-    figch.write_image(f'{outputF}.png', engine="kaleido",
+        figch, file=fileHtml, auto_open=True)
+    figch.write_image(filePng, engine="kaleido",
                       width=1920, height=1080)
 
 
