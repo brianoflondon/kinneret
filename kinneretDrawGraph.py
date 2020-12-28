@@ -628,7 +628,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
 
     df[dCol] = df['level'].diff(periods=-period) * 100
 
-    df['hovtext'] = [f'{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}' for (
+    df['hovtext'] = [f'{period} day change<br>{lv:.3f}m {ch:.1f}cm<br>{d:%d %b %Y}<extra></extra>' for (
         lv, ch, d) in zip(round(df['level'], 3), df[dCol], df.index)]
 
     filtUp = ((df[dCol] > 0) & (df['real']))
@@ -646,6 +646,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
     colU = df[filtUp][dCol]
     colD = df[filtDn][dCol]
 
+    mSize = 12  # Marker Size
     figch.add_trace(go.Scatter(x=df[filtUp].index, y=yValsU,
                                visible = False,
                                meta=period,
@@ -655,7 +656,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                name=f'{period} Day Up',
                                showlegend=False,
                                mode='markers',
-                               marker=dict(size=10,
+                               marker=dict(size=mSize,
                                            colorscale=blueUp,
                                            reversescale=False,
                                            showscale=True,
@@ -673,10 +674,10 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                name='No Change',
                                showlegend=False,
                                mode='markers',
-                               marker=dict(size=10,
-                                           color='lightblue',
+                               marker=dict(size=mSize,
+                                           color='white',
                                            line=dict(
-                                               color='MediumPurple',
+                                               color='#0036B2',
                                                width=2
                                            )
                                            )
@@ -690,7 +691,7 @@ def addChangeTriangles(figch, plotLevel=True, df=None, period=7):
                                name=f'{period} Day Down',
                                showlegend=False,
                                mode='markers',
-                               marker=dict(size=10,
+                               marker=dict(size=mSize,
                                            # cmax = 0,
                                            # cmin = -0.2,
                                            colorscale=redDn,
