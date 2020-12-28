@@ -22,9 +22,6 @@ def getYearAgo(df, i, y):
         lowHigh = 'the same as'
     else:
         lowHigh = 'lower than'
-    s = ''
-    if y > 1:
-        s = 's'
 
     # levelHist = f'{yearDiff}m {lowHigh} {y} year{s} ago ({yearAgo:%Y} {levelYago}m)'
     levelHist = f'{yearDiff}m {lowHigh} {yearAgo:%Y} {levelYago}m'
@@ -76,6 +73,7 @@ def getLastTweetID():
     try:
         urL = lastTweet['entities']['urls'][0]['expanded_url']
     except Exception as ex:
+        print(ex)
         urL = f'https://twitter.com/brianoflondon/status/{iD}'
         
     return iD, urL
