@@ -35,7 +35,8 @@ def getTweetText(df, i=0):
     """ Returns a string for a tweet text based on level (i) days ago """
     tDate = df.index[i]
     tLev = df.iloc[[i]]['level'].item()
-    tDif = round(1000*df.iloc[[i]]['7day'].item(), 2)
+    df['7day-tw'] = df['level'].diff(periods=-7)
+    tDif = round(1000*df.iloc[[i]]['7day-tw'].item(), 2)
     if tDif < 0:
         tCh = f'📉 dropping {-tDif:.0f}mm'
     elif tDif == 0:
