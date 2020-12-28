@@ -48,12 +48,29 @@ def relFileName(fol,file,ext=''):
 def importReadings():
     """ Import history to date and return the Pandas Dataset """
     dataFile = getDataFileName()
-
     def d_parser(x): return datetime.strptime(x, outputDateFormat)
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     df.set_index('date', inplace=True)
-    df.sort_values(by='date', inplace=True, ascending=False)
-    
+    df.sort_values(by='date', inplace=True, ascending=False)    
+    return df
+
+def addInterpolated(df,dateFr=None, dateTo=None):
+    """ Take in the raw dataframe and return one with interpolated points 
+        moved this function out of the graphing kinneretDrawGraph module """
+    df['real'] = True
+    # Filter by dates if we want a limited subset
+    if dateFr is not None:
+        filt = df.index >= dateFr
+        df = df[filt]
+    if dateTo is not None:
+        filt = df.index <= dateTo
+        df = df[filt]
+
+    # Fill in the blanks.
+    upsampled = df.resample('1D')
+    df = upsampled.interpolate(method='cubicspline')
+    df.fillna(value=False, inplace=True)
+    df.sort_values(by='date', ascending=False, inplace=True)
     return df
 
 
@@ -191,6 +208,9 @@ def checkAndTweet(sendNow=False):
         kdg.drawChangesGraph()
         kdg.uploadGraphs()
 
+        # This is HIDEOUS CODE because we already did the interpolation for the graphs
+        # but I'm doing it again here too just to look back 7days.
+        df = addInterpolated(df)
         sent, tweets, threadIDs, tweetURLs, errors = tw.sendLatestTweet(df, sendNow, newItems)
         for err in errors:
             logger.critical(err)

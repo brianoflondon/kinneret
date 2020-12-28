@@ -48,25 +48,9 @@ def getLevelDelta(df, ind, dateOff):
 
 def setupDataFrames(dateFr=None, dateTo=None):
     """ Set up the global dataframe with all the main data """
-    # df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
-    # df.set_index('date', inplace=True)
     df = gnr.importReadings()
-    df['real'] = True
-    # Filter by dates if we want a limited subset
-    if dateFr is not None:
-        filt = df.index >= dateFr
-        df = df[filt]
-    if dateTo is not None:
-        filt = df.index <= dateTo
-        df = df[filt]
-
-    # Fill in the blanks.
-    upsampled = df.resample('1D')
-    df = upsampled.interpolate(method='cubicspline')
-    df.fillna(value=False, inplace=True)
-    df.sort_values(by='date', ascending=False, inplace=True)
-
-
+    df = gnr.addInterpolated(df,dateFr,dateTo)
+    
     df['year'] = df.index.year
     df['month'] = df.index.month
     # df['week'] = df.index.week    #Depreciated function
