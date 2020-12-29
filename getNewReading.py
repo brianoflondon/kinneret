@@ -16,7 +16,7 @@ import re
 from itertools import zip_longest
 import math
 import kinneretDrawGraph as kdg
-import twitter.postToTwitter as tw
+import postToTwitter as tw
 
 webDateFormat = '%d.%m.%Y'
 outputDateFormat = '%Y-%m-%d'
@@ -297,7 +297,7 @@ def testMultiTweet():
 
 if __name__ == "__main__":
     # df, sent, txt = runCheckAndTweet(1, 0.5)
-    df, sent, txt = checkAndTweet(True)
+    df, sent, txt = checkAndTweet(False)
     # testMultiTweet()
 
 # for y in range(0,100):

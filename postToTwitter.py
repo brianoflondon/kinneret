@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import csv
 import datetime
+import os
 # from twitterCreds import setupTweets
 from twitter.twitterCreds import setupTweets
 
@@ -9,6 +10,8 @@ def getLastTweetJson():
     """ Return the filepath of the last_tweet.json file """
     dirname = os.path.dirname(__file__)
     return os.path.join(dirname, 'last_tweet.json')
+    # return '/Users/gbishko/Documents/Python-iMac/kinneret/last_tweet.json'
+
 
 
 def getYearAgo(df, i, y):
