@@ -72,7 +72,7 @@ def getTweetText(df, i=0):
 
 def getLastTweetID():
     """ Return the ID of the last tweet in the thread for the Kinneret level """
-    ltj = getLastTweetJson
+    ltj = getLastTweetJson()
     with open(ltj, 'r') as jsfile:
         lastTweet = json.load(jsfile)
     iD = lastTweet['id']
@@ -150,7 +150,7 @@ def sendTweet(tweets):
             
         threadIDs.append(iD)
         threadURLs.append(urL)
-        ltj = getLastTweetJson
+        ltj = getLastTweetJson()
         with open(ltj, 'w') as jsfile:
             json.dump(thisID._json, jsfile, indent=2)
 
@@ -208,7 +208,7 @@ def getTweetJson(thisId):
 
     myStatus = api.get_status(id=thisId, include_card_uri=True)
     myJson = myStatus._json
-    ltj = getLastTweetJson
+    ltj = getLastTweetJson()
     with open(ltj, 'w') as jsfile:
         json.dump(myJson, jsfile, indent=2)
 
