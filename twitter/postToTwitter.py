@@ -5,6 +5,11 @@ import datetime
 # from twitterCreds import setupTweets
 from twitter.twitterCreds import setupTweets
 
+def getLastTweetJson():
+    """ Return the filepath of the last_tweet.json file """
+    dirname = os.path.dirname(__file__)
+    return os.path.join(dirname, 'last_tweet.json')
+
 
 def getYearAgo(df, i, y):
     """ Get text comparint the level i days ago to y years ago. """
@@ -67,7 +72,8 @@ def getTweetText(df, i=0):
 
 def getLastTweetID():
     """ Return the ID of the last tweet in the thread for the Kinneret level """
-    with open('last_tweet.json', 'r') as jsfile:
+    ltj = getLastTweetJson
+    with open(ltj, 'r') as jsfile:
         lastTweet = json.load(jsfile)
     iD = lastTweet['id']
     try:
@@ -144,8 +150,8 @@ def sendTweet(tweets):
             
         threadIDs.append(iD)
         threadURLs.append(urL)
-
-        with open('last_tweet.json', 'w') as jsfile:
+        ltj = getLastTweetJson
+        with open(ltj, 'w') as jsfile:
             json.dump(thisID._json, jsfile, indent=2)
 
 
@@ -202,8 +208,8 @@ def getTweetJson(thisId):
 
     myStatus = api.get_status(id=thisId, include_card_uri=True)
     myJson = myStatus._json
-
-    with open('last_tweet.json', 'w') as jsfile:
+    ltj = getLastTweetJson
+    with open(ltj, 'w') as jsfile:
         json.dump(myJson, jsfile, indent=2)
 
     return myStatus
