@@ -19,6 +19,8 @@ def githubUpdate():
     """ Git Commit and update after running """
     datestamp = datetime.now()
     comMes = f'Auto Commit {datestamp}'
+    dirname = os.path.dirname(__file__)
+    os.chdir(dirname)
     os.system(f'git commit -a -m "{comMes}"')
     os.system(f'git push')
 
