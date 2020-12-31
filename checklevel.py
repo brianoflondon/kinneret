@@ -24,7 +24,13 @@ def githubUpdate():
     os.system(f'git commit -a -m "{comMes}"')
     os.system(f'git push')
 
-    
+def printTimeNow(msg = ''):
+    """ prints the time now """
+    if len(msg) > 0:
+        msg = ' - ' + msg
+    datestamp = datetime.now()
+    comMes = f'The time now is: {datestamp}{msg}'
+    print(comMes)
 
 # Create the parser
 my_parser = argparse.ArgumentParser(prog='checklevel',
@@ -62,19 +68,29 @@ my_parser.add_argument('-c',
                        default=False,
                        help='Run a Git Commit and Git Push and nothing else')
 
+my_parser.add_argument('-t',
+                       '--time',
+                       action='store_true', required=False,
+                       default=False,
+                       help='prints out the time')
+
 
 # my_parser.add_argument('-h',
 #                        '--help',
 #                        action='help',
 #                        help='Shows Help')
 
-
+printTimeNow('Starting')
 # Execute parse_args()
 args = my_parser.parse_args()
 myArgs = vars(args)
 
 if myArgs['commit'] is True:
     githubUpdate()
+    quit()
+    
+if myArgs['time'] is True:
+    printTimeNow()
     quit()
 
 if myArgs['auto'] is False:
@@ -100,7 +116,7 @@ else:
         fre = 10
         freTD = timedelta(minutes=fre)
         now = datetime.now()
-        print(now.time())
+        printTimeNow()
 
         startChecks = now.replace(hour=11, minute=0)
         endChecks = now.replace(hour=12, minute=15)
@@ -115,6 +131,7 @@ else:
 
                 if sent:
                     githubUpdate()
+                    printTimeNow('End')
                     quit()
 
             elif now < startChecks:
@@ -127,9 +144,11 @@ else:
                 _, sent, txt = runCheckAndTweet(maxT, fre)
                 if sent:
                     githubUpdate()
+                    printTimeNow('End')
                     quit()
             elif now > endChecks:
                 print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
+                printTimeNow('End')
                 quit()
 
             
