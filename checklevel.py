@@ -119,7 +119,7 @@ else:
         printTimeNow()
 
         startChecks = now.replace(hour=11, minute=0)
-        endChecks = now.replace(hour=12, minute=15)
+        endChecks = now.replace(hour=12, minute=21)
         
         maxTdelta = endChecks - now
         if now.weekday() in daysToRun: #Monday to 
@@ -146,7 +146,7 @@ else:
                     githubUpdate()
                     printTimeNow('End')
                     quit()
-            elif now > endChecks:
+            elif now >= endChecks:
                 print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
                 printTimeNow('End')
                 quit()
