@@ -238,7 +238,7 @@ def checkAndTweet(sendNow=False):
 
 
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
-logging.basicConfig(filename='getNewReading.log',
+logging.basicConfig(filename='~/Documents/Python-iMac/kinneret/getNewReading.log',
                     level=logging.INFO,
                     format=LOG_FORMAT)
 
