@@ -238,7 +238,7 @@ def checkAndTweet(sendNow=False):
 
 
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
-logging.basicConfig(filename='~/Documents/Python-iMac/kinneret/getNewReading.log',
+logging.basicConfig(filename='/Users/gbishko/Documents/Python-iMac/kinneret/getNewReading.log',
                     level=logging.INFO,
                     format=LOG_FORMAT)
 
@@ -297,7 +297,7 @@ def testMultiTweet():
 
 if __name__ == "__main__":
     # df, sent, txt = runCheckAndTweet(1, 0.5)
-    df, sent, txt = checkAndTweet(False)
+    df, sent, txt = checkAndTweet(True)
     # testMultiTweet()
 
 # for y in range(0,100):
