@@ -119,11 +119,11 @@ else:
         printTimeNow()
 
         startChecks = now.replace(hour=11, minute=0)
-        endChecks = now.replace(hour=13, minute=21)
+        endChecks = now.replace(hour=13, minute=15)
         
-        maxTdelta = endChecks - now
+        maxTdelta = endChecks - datetime.now()
         if now.weekday() in daysToRun: #Monday to 
-            if (timeInRange(startChecks,endChecks,now)):
+            if (timeInRange(startChecks,endChecks,datetime.now())):
                 maxTdelta = endChecks - now
                 maxT = maxTdelta.total_seconds() / 60
                 fre = 10
