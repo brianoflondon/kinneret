@@ -3,21 +3,23 @@
     with very few modifications """
 
 
-from datetime import datetime
-import glob
-import pandas as pd
 import csv
-import plotly as py
-import plotly.graph_objs as go
-import plotly.express as px
-import plotly.io as pio
-from convertdate import hebrew, holidays
-from myChartStudio import chartStudioCreds
-import chart_studio.plotly as cs_py
+import glob
 import json
-from sftpconnect import connectSFTP
+from datetime import datetime
+
+import chart_studio.plotly as cs_py
+import pandas as pd
+import plotly as py
+import plotly.express as px
+import plotly.graph_objs as go
+import plotly.io as pio
 import pysftp
+from convertdate import hebrew, holidays
+
 import getNewReading as gnr
+from myChartStudio import chartStudioCreds
+from sftpconnect import connectSFTP
 
 upperRedLine = -208.8
 lowerRedLine = -213.0

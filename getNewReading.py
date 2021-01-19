@@ -1,20 +1,22 @@
 """ Code to reach out and grab any new readings on the Kinneret """
 
-from requests_html import HTMLSession
-import json
-from bs4 import BeautifulSoup
-import lxml
-import os
 import csv
-# import sqlite3
-from datetime import datetime, timedelta
-import pandas as pd
-import time
+import json
 import logging
+import math
+import os
 import random
 import re
+import time
+# import sqlite3
+from datetime import datetime, timedelta
 from itertools import zip_longest
-import math
+
+import lxml
+import pandas as pd
+from bs4 import BeautifulSoup
+from requests_html import HTMLSession
+
 import kinneretDrawGraph as kdg
 import postToTwitter as tw
 
