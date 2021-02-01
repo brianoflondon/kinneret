@@ -722,10 +722,11 @@ def uploadGraphs():
     """ Upload the graphs to brianoflondon.me using SFTP """
     sftp = pysftp
     sftp = connectSFTP()
-    fold = 'brianoflondon_site'
+    fold = '/Users/gbishko/Documents/Python-iMac/kinneret/brianoflondon_site'
     with sftp:
         sftp.cwd('public_html/kinneret')
         for filen in glob.glob(f'{fold}/*'):
+            print(f'Uploading: {filen}')
             sftp.put(filen)
     sftp.close()
     
@@ -768,8 +769,8 @@ if __name__ == "__main__":
     # print(df)
     # print(df.describe())
 
-    df = drawKinGraph()
-    drawChangesGraph(df)
+    # df = drawKinGraph()
+    # drawChangesGraph(df)
     uploadGraphs()
     # drawChangesGraph(period=7)
     # drawChangesGraph(period=1)
