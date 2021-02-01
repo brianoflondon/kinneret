@@ -122,6 +122,11 @@ else:
         endChecks = now.replace(hour=13, minute=19)
         
         maxTdelta = endChecks - datetime.now()
+        if now >= endChecks:
+            print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
+            printTimeNow('End')
+            quit()
+        
         if now.weekday() in daysToRun: #Monday to 
             if (timeInRange(startChecks,endChecks,datetime.now())):
                 maxTdelta = endChecks - now
