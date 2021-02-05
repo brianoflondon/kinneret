@@ -128,7 +128,7 @@ else:
             quit()
         
         if now.weekday() in daysToRun: #Monday to 
-            if (timeInRange(startChecks,endChecks,datetime.now())):
+            if (timeInRange(startChecks,endChecks,now)):
                 maxTdelta = endChecks - now
                 maxT = maxTdelta.total_seconds() / 60
                 fre = 10
