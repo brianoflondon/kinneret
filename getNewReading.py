@@ -42,7 +42,7 @@ def relFileName(fol,file,ext=''):
     dirname = os.path.dirname(__file__)
     if ext != '':
         file = f'{file}.{ext}'
-    
+
     return os.path.join(dirname, fol, file)
 
 
@@ -53,11 +53,11 @@ def importReadings():
     def d_parser(x): return datetime.strptime(x, outputDateFormat)
     df = pd.read_csv(dataFile, parse_dates=['date'], date_parser=d_parser)
     df.set_index('date', inplace=True)
-    df.sort_values(by='date', inplace=True, ascending=False)    
+    df.sort_values(by='date', inplace=True, ascending=False)
     return df
 
 def addInterpolated(df,dateFr=None, dateTo=None):
-    """ Take in the raw dataframe and return one with interpolated points 
+    """ Take in the raw dataframe and return one with interpolated points
         moved this function out of the graphing kinneretDrawGraph module """
     df['real'] = True
     # Filter by dates if we want a limited subset
@@ -181,11 +181,11 @@ def updateLevels():
 # def updateCalcValues(df):
 #     """ Updates the 1day 7day and 1month calc values in the Dataframe
 #         Only updating what has changed. """
-        
+
 #     dateOff1m = pd.DateOffset(months=-1)
 #     dateOff7d = pd.DateOffset(days=-7)
 #     dateOff1d = pd.DateOffset(days=-1)
-    
+
 #     df['1day'] = [naCheckDelta(df,x,y,dateOff1d) for x,y in zip(df.index,df['1day'])]
 #     df['7day'] = [naCheckDelta(df,x,y,dateOff7d) for x,y in zip(df.index,df['7day'])]
 #     df['1month'] = [naCheckDelta(df,x,y,dateOff1m) for x,y in zip(df.index,df['1month'])]
@@ -227,7 +227,7 @@ def checkAndTweet(sendNow=False):
         logTxt = f'No new Items found.'
         logger.warning(logTxt)
         sent = False
-        
+
 
     if sent:
         # logger.info(f'Tweet Sent: {txt}')
@@ -235,7 +235,7 @@ def checkAndTweet(sendNow=False):
     else:
         # logger.warning(f'Tweet NOT Sent: {txt}')
         notifyMac('Kinneret Levels', 'NOTHING SENT')
-    return(df, sent, logTxt)        
+    return(df, sent, logTxt)
 
 
 
@@ -252,6 +252,8 @@ def runCheckAndTweet(maxTime=360, freq=10):
         Tweets out the level if it changes
         Will run until the site changes or maxTime (in minutes) is reached"""
 
+    if maxTime < freq:
+        maxTime = freq
     maxSec = maxTime * 60
     freqSec = freq * 60
     sent = False
@@ -272,6 +274,7 @@ def runCheckAndTweet(maxTime=360, freq=10):
         notifyMac('Kinneret Levels', msgNow)
         logger.warning(msgNow)
         if timeRem <= freqSec:
+            time.sleep(timeRem+1)
             break
         sleepT = freqSec*fudge
         if sleepT < 0:
@@ -306,5 +309,5 @@ if __name__ == "__main__":
 #     print(tw.getYearAgo(df,0,y))
     # Use this line to rebuild the last tweet json
     # twObject =tw.getTweetJson(1325738595404181505)
-    
+
     # tw.fillThreadCSV('1325738595404181505')

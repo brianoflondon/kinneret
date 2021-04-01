@@ -14,7 +14,7 @@ def timeInRange(start, end, x):
         return start.time() <= x.time() <= end.time()
     else:
         return start.time() <= x.time() or x.time() <= end.time()
-    
+
 def githubUpdate():
     """ Git Commit and update after running """
     datestamp = datetime.now()
@@ -88,7 +88,7 @@ myArgs = vars(args)
 if myArgs['commit'] is True:
     githubUpdate()
     quit()
-    
+
 if myArgs['time'] is True:
     printTimeNow()
     quit()
@@ -119,15 +119,15 @@ else:
         printTimeNow()
 
         startChecks = now.replace(hour=11, minute=0)
-        endChecks = now.replace(hour=13, minute=19)
-        
+        endChecks = now.replace(hour=13, minute=35)
+
         maxTdelta = endChecks - datetime.now()
         if now >= endChecks:
             print(f'No point running after {endChecks:%H:%M on %Y-%m-%d}')
             printTimeNow('End')
             quit()
-        
-        if now.weekday() in daysToRun: #Monday to 
+
+        if now.weekday() in daysToRun: #Monday to
             if (timeInRange(startChecks,endChecks,now)):
                 maxTdelta = endChecks - now
                 maxT = maxTdelta.total_seconds() / 60
@@ -156,7 +156,7 @@ else:
                 printTimeNow('End')
                 quit()
 
-            
+
         else:
             dayText = weekDays[now.weekday()]
             print(f'Not Running on {dayText}')
