@@ -97,13 +97,17 @@ def pageChangeCheck(df, skipUrl=0):
     # obj = r.html.find('span.h1.reforma-medium.xs-me-10.dark-blue-txt.ng-binding')
     # countOfReadings = obj[0].text
     obj2 = r.html.find('bdi')
-    dDate = datetime.strptime(obj2[0].text, webDateFormat)
+    source = obj2[0].html
+    soup = BeautifulSoup(source,'lxml')
+    first_date = soup.find('bdi')
+    dDate = datetime.strptime(first_date.next, webDateFormat)
 
     filt = (df.index == dDate)
     if len(df[filt]) > 0:
         changed = False
     else:
         changed = True
+
     return changed, r
 
 
