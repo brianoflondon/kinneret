@@ -23,7 +23,7 @@ sftpconnect.py
 kin.html
 .gitignore
 data/.DS_Store
-__pycache__/*
+__pycache__/
 twitter/__pycache__
 __pycache__/getNewReading.cpython-38.pyc
 __pycache__/getNewReading.cpython-38.pyc
