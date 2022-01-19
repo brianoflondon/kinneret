@@ -1,22 +1,23 @@
 """ Code to reach out and grab any new readings on the Kinneret """
 
 
-from dataclasses import dataclass
 import json
 import logging
 import os
 import random
 import re
 import time
+from dataclasses import dataclass
 # import sqlite3
 from datetime import datetime, timedelta
 from itertools import zip_longest
+from ssl import SSLCertVerificationError, SSLError
 from typing import List
-from pydantic import BaseModel
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from pydantic import BaseModel
 from requests_html import HTMLSession
 
 import kinneretDrawGraph as kdg
@@ -56,7 +57,7 @@ def importReadings():
     def d_parser(x):
         return datetime.strptime(x, outputDateFormat)
 
-    df = pd.read_csv(dataFile, parse_dates=["date"]) #, date_parser=d_parser)
+    df = pd.read_csv(dataFile, parse_dates=["date"])  # , date_parser=d_parser)
     df.set_index("date", inplace=True)
     df.sort_values(by="date", inplace=True, ascending=False)
     return df
@@ -299,7 +300,6 @@ def testMultiTweet():
         print(t, tId, tURL)
 
 
-
 class LevelData(BaseModel):
     Survey_Date: datetime
     Kinneret_Level: float
@@ -307,22 +307,26 @@ class LevelData(BaseModel):
 
 def api_get_new_data():
     """new code to use the API"""
-    df=importReadings()
+    df = importReadings()
 
     last_reading = df.index[0]
     days_ago = datetime.now() - last_reading
 
     url = "https://data.gov.il/api/3/action/datastore_search?resource_id=2de7b543-e13d-4e7e-b4c8-56071bc4d3c8"
-    params = {
-        "limit":days_ago.days + 2,
-        "offset":0
-    }
+    params = {"limit": days_ago.days + 2, "offset": 0}
 
-    r = requests.get(url, params=params)
+    try:
+        r = requests.get(url, params=params, verify=True)
+    except Exception as ex:
+        try:
+            r = requests.get(url, params=params, verify=False)
+        except Exception as ex:
+            return 0, df
+
+
+
     if r.status_code != 200:
-        return
-
-    print(json.dumps(r.json(),indent=2))
+        return 0, df
 
     data = r.json()
     levels: List[LevelData] = []
@@ -342,15 +346,11 @@ def api_get_new_data():
     return countnewItems, df
 
 
-
-
-
-
 if __name__ == "__main__":
     # df, sent, txt = runCheckAndTweet(1, 0.5)
     # df = api_get_new_data()
 
-    df, sent, txt = checkAndTweet(sendNow=False)
+    df, sent, txt = checkAndTweet(sendNow=True)
     # testMultiTweet()
 
 # for y in range(0,100):
