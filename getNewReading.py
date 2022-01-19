@@ -153,7 +153,10 @@ def updateLevels():
         for elm in listTags:
             isDate = elm.bdi
             if isDate is None:
-                xLevel = float(elm.next)
+                try:
+                    xLevel = float(elm.next)
+                except:
+                    xLevel = 0.0
             else:
                 xDate = str(isDate.next)
                 dDate = datetime.strptime(xDate, webDateFormat)
