@@ -1,17 +1,21 @@
 """ Code to reach out and grab any new readings on the Kinneret """
 
 
+from dataclasses import dataclass
+import json
 import logging
 import os
 import random
 import re
 import time
-
 # import sqlite3
 from datetime import datetime, timedelta
 from itertools import zip_longest
+from typing import List
+from pydantic import BaseModel
 
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
@@ -52,7 +56,7 @@ def importReadings():
     def d_parser(x):
         return datetime.strptime(x, outputDateFormat)
 
-    df = pd.read_csv(dataFile, parse_dates=["date"], date_parser=d_parser)
+    df = pd.read_csv(dataFile, parse_dates=["date"]) #, date_parser=d_parser)
     df.set_index("date", inplace=True)
     df.sort_values(by="date", inplace=True, ascending=False)
     return df
@@ -182,34 +186,14 @@ def updateLevels():
     return countnewItems, df
 
 
-# def naCheckDelta(df,x,y,dateOff):
-#     """ Returns the delta value for this offset first checking if the y value is NAN """
-#     if math.isnan(y):
-#         return(kdg.getLevelDelta(df,x,dateOff))
-#     else:
-#         return y
-
-# def updateCalcValues(df):
-#     """ Updates the 1day 7day and 1month calc values in the Dataframe
-#         Only updating what has changed. """
-
-#     dateOff1m = pd.DateOffset(months=-1)
-#     dateOff7d = pd.DateOffset(days=-7)
-#     dateOff1d = pd.DateOffset(days=-1)
-
-#     df['1day'] = [naCheckDelta(df,x,y,dateOff1d) for x,y in zip(df.index,df['1day'])]
-#     df['7day'] = [naCheckDelta(df,x,y,dateOff7d) for x,y in zip(df.index,df['7day'])]
-#     df['1month'] = [naCheckDelta(df,x,y,dateOff1m) for x,y in zip(df.index,df['1month'])]
-#     return df
-
-
 def checkAndTweet(sendNow=False):
     """Checks for a new reading, records it and tweets if something
     has changed. Returns dataframe and boolean True if tweet sent
     and the text of the tweet or no tweet sent"""
     blCheck = True
     if blCheck:
-        newItems, df = updateLevels()
+        # newItems, df = updateLevels()
+        newItems, df = api_get_new_data()
     else:
         df = importReadings()
         newItems = 0
@@ -315,9 +299,58 @@ def testMultiTweet():
         print(t, tId, tURL)
 
 
+
+class LevelData(BaseModel):
+    Survey_Date: datetime
+    Kinneret_Level: float
+
+
+def api_get_new_data():
+    """new code to use the API"""
+    df=importReadings()
+
+    last_reading = df.index[0]
+    days_ago = datetime.now() - last_reading
+
+    url = "https://data.gov.il/api/3/action/datastore_search?resource_id=2de7b543-e13d-4e7e-b4c8-56071bc4d3c8"
+    params = {
+        "limit":days_ago.days + 2,
+        "offset":0
+    }
+
+    r = requests.get(url, params=params)
+    if r.status_code != 200:
+        return
+
+    print(json.dumps(r.json(),indent=2))
+
+    data = r.json()
+    levels: List[LevelData] = []
+    countnewItems = 0
+    for record in data["result"]["records"]:
+        a = LevelData(**record)
+        levels.append(a)
+        if a.Survey_Date > df.index[0]:
+            newRow = pd.Series(data={"level": a.Kinneret_Level}, name=a.Survey_Date)
+            df = df.append(newRow, ignore_index=False)
+            logger.info(f"Adding: {a.Survey_Date} {newRow}")
+            countnewItems += 1
+
+    df.sort_values(by="date", inplace=True, ascending=False)
+    dataFile = getDataFileName()
+    df.to_csv(dataFile, index_label="date", columns=["level"])
+    return countnewItems, df
+
+
+
+
+
+
 if __name__ == "__main__":
     # df, sent, txt = runCheckAndTweet(1, 0.5)
-    df, sent, txt = checkAndTweet(True)
+    # df = api_get_new_data()
+
+    df, sent, txt = checkAndTweet(sendNow=False)
     # testMultiTweet()
 
 # for y in range(0,100):
